@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Simple Alarm</title>
+<style>
+  :root {
+    --bg: #111;
+    --fg: #f5f7fa;
+    --accent: #7cc4ff;
+    --muted: #8a93a0;
+    --btn: #1e2530;
+    --btn-hover: #2a3340;
+    --danger: #ff5b6e;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    height: 100%;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: system-ui, -apple-system, "Segoe UI", "Hiragino Kaku Gothic ProN", sans-serif;
+  }
+  body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    transition: background-color 0.2s ease;
+  }
+  body.ringing {
+    animation: flash 0.6s steps(2, end) infinite;
+  }
+  @keyframes flash {
+    0%   { background: var(--bg); }
+    100% { background: var(--danger); }
+  }
+  main {
+    width: 100%;
+    max-width: 420px;
+    text-align: center;
+  }
+  .clock {
+    font-family: ui-monospace, "SF Mono", Consolas, monospace;
+    font-size: clamp(48px, 14vw, 88px);
+    font-weight: 600;
+    letter-spacing: 2px;
+    color: var(--fg);
+    margin-bottom: 8px;
+  }
+  .date {
+    color: var(--muted);
+    font-size: 14px;
+    margin-bottom: 36px;
+  }
+  .field {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  label {
+    color: var(--muted);
+    font-size: 13px;
+  }
+  input[type="time"] {
+    background: var(--btn);
+    color: var(--fg);
+    border: 1px solid #2a3340;
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-size: 24px;
+    font-family: ui-monospace, monospace;
+    text-align: center;
+    width: 160px;
+    color-scheme: dark;
+  }
+  input[type="time"]:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+  .buttons {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin-top: 4px;
+  }
+  button {
+    background: var(--btn);
+    color: var(--fg);
+    border: none;
+    border-radius: 10px;
+    padding: 12px 22px;
+    font-size: 15px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+  button:hover { background: var(--btn-hover); }
+  button.primary { background: var(--accent); color: #0a1018; font-weight: 600; }
+  button.primary:hover { background: #9ad3ff; }
+  .status {
+    margin-top: 24px;
+    color: var(--accent);
+    font-size: 14px;
+    min-height: 20px;
+  }
+  .stop {
+    display: none;
+    margin-top: 32px;
+    background: var(--danger);
+    color: #fff;
+    font-size: 22px;
+    font-weight: 700;
+    padding: 22px 40px;
+    border-radius: 14px;
+  }
+  .stop:hover { background: #ff7f8e; }
+  body.ringing .stop { display: inline-block; }
+</style>
+</head>
+<body>
+<main>
+  <div class="clock" id="clock">--:--:--</div>
+  <div class="date" id="date"></div>
+
+  <div class="field">
+    <label for="alarmTime">アラーム時刻</label>
+    <input type="time" id="alarmTime" />
+    <div class="buttons">
+      <button class="primary" id="setBtn">セット</button>
+      <button id="clearBtn">解除</button>
+    </div>
+  </div>
+
+  <div class="status" id="status"></div>
+  <button class="stop" id="stopBtn">停止</button>
+</main>
+
+<script>
+  const clockEl = document.getElementById("clock");
+  const dateEl = document.getElementById("date");
+  const inputEl = document.getElementById("alarmTime");
+  const setBtn = document.getElementById("setBtn");
+  const clearBtn = document.getElementById("clearBtn");
+  const stopBtn = document.getElementById("stopBtn");
+  const statusEl = document.getElementById("status");
+
+  let alarmTime = null;
+  let lastFiredKey = null;
+  let audioCtx = null;
+  let beepTimer = null;
+
+  const pad = (n) => String(n).padStart(2, "0");
+
+  function tick() {
+    const now = new Date();
+    const hh = pad(now.getHours());
+    const mm = pad(now.getMinutes());
+    const ss = pad(now.getSeconds());
+    clockEl.textContent = `${hh}:${mm}:${ss}`;
+    dateEl.textContent = now.toLocaleDateString("ja-JP", {
+      year: "numeric", month: "long", day: "numeric", weekday: "long",
+    });
+
+    if (alarmTime && !document.body.classList.contains("ringing")) {
+      const cur = `${hh}:${mm}`;
+      const key = `${now.toDateString()} ${cur}`;
+      if (cur === alarmTime && ss === "00" && lastFiredKey !== key) {
+        lastFiredKey = key;
+        ring();
+      }
+    }
+  }
+
+  function ring() {
+    document.body.classList.add("ringing");
+    statusEl.textContent = "⏰ アラーム！";
+    startBeep();
+  }
+
+  function stopRing() {
+    document.body.classList.remove("ringing");
+    stopBeep();
+    if (alarmTime) {
+      statusEl.textContent = `セット中: ${alarmTime}`;
+    } else {
+      statusEl.textContent = "";
+    }
+  }
+
+  function startBeep() {
+    if (!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    const playTone = () => {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = "sine";
+      osc.frequency.value = 880;
+      gain.gain.setValueAtTime(0, audioCtx.currentTime);
+      gain.gain.linearRampToValueAtTime(0.25, audioCtx.currentTime + 0.02);
+      gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.4);
+      osc.connect(gain).connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.4);
+    };
+    playTone();
+    beepTimer = setInterval(playTone, 800);
+  }
+
+  function stopBeep() {
+    if (beepTimer) {
+      clearInterval(beepTimer);
+      beepTimer = null;
+    }
+  }
+
+  setBtn.addEventListener("click", () => {
+    const v = inputEl.value;
+    if (!v) {
+      statusEl.textContent = "時刻を入力してください";
+      return;
+    }
+    alarmTime = v;
+    lastFiredKey = null;
+    statusEl.textContent = `セット中: ${alarmTime}`;
+    if (audioCtx && audioCtx.state === "suspended") audioCtx.resume();
+  });
+
+  clearBtn.addEventListener("click", () => {
+    alarmTime = null;
+    lastFiredKey = null;
+    if (document.body.classList.contains("ringing")) stopRing();
+    statusEl.textContent = "";
+  });
+
+  stopBtn.addEventListener("click", stopRing);
+
+  tick();
+  setInterval(tick, 1000);
+</script>
+</body>
+</html>
