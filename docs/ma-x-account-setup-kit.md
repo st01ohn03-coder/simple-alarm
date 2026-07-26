@@ -26,19 +26,22 @@ https://accounts.google.com/signup
 
 https://x.com/i/flow/signup → 「メールアドレスで登録」→ STEP 1のGmailを使用
 
-### ハンドル(@〜)候補 ※空きがあるものを上から順に
+### ネーミング統一案(Gmail・X・Instagramで同一文字列に揃える)
 
-1. `@ma_anken_memo` (M&A案件メモ)
-2. `@small_ma_watch` (スモールM&Aウォッチ)
-3. `@kaisha_nedan` (会社の値段)
-4. `@ma_anken_jp`
-5. `@ma_zukan` (M&A図鑑)
+**★推奨: 案1「会社の値段」路線** — 本家(ma_memo_jp)と被らず、M&Aを知らない層にも一瞬で刺さる言葉のため。
 
-### アカウント名(表示名)候補
+| | 案1 ★推奨 | 案2 メモ路線 | 案3 図鑑路線 |
+|---|---|---|---|
+| コンセプト | 会社の値段 | M&A案件メモ | スモールM&A図鑑 |
+| X ハンドル | `@kaisha_nedan` | `@ma_anken_memo` | `@small_ma_zukan` |
+| Instagram | `kaisha_nedan` | `ma_anken_memo` | `small_ma_zukan` |
+| Gmail | `kaisha.nedan@gmail.com` | `ma.anken.memo@gmail.com` | `small.ma.zukan@gmail.com` |
+| 表示名 | 会社の値段メモ📝|M&A案件ウォッチ | M&A案件メモ|売り買い案件ウォッチ | スモールM&A図鑑|買える会社カタログ |
 
-- `M&A案件メモ|会社の値段ウォッチ`
-- `スモールM&A図鑑`
-- `会社の値段メモ|M&A案件ウォッチ`
+ハンドルが取られていた場合の代替(末尾に付ける): `_jp` / `_info` / `2026`
+(例: `@kaisha_nedan_jp`)
+
+※案2は本家 @ma_memo_jp と名前が近く「模倣アカウント」に見えるリスクがあるため次点。
 
 ### プロフィール文(160字以内・コピペ用)
 
