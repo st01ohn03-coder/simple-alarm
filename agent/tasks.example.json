@@ -1,0 +1,148 @@
+{
+  "_readme": [
+    "このファイルをコピーして agent/tasks.json を作り、自宅PCでやらせたい作業を書いてください。",
+    "リモートから送れるのは id だけです。command と args はこのファイル（＝自宅PC側）でしか決められません。",
+    "コマンドはシェルを介さず実行されるので、'&&' や '|'、リダイレクトは使えません。",
+    "複数の処理をまとめたいときは、シェルスクリプト／バッチファイルを1つ作り、それを command に指定してください。",
+    "platform は win32 / darwin / linux。省略すると全OSで有効になります。",
+    "同じ id を OS ごとに書き分けても構いません（起動中のOSに合うものだけが採用されます）。"
+  ],
+  "tasks": [
+    {
+      "id": "lock",
+      "label": "画面をロック",
+      "platform": "win32",
+      "command": "rundll32",
+      "args": ["user32.dll,LockWorkStation"]
+    },
+    {
+      "id": "lock",
+      "label": "画面をロック",
+      "platform": "darwin",
+      "command": "pmset",
+      "args": ["displaysleepnow"]
+    },
+    {
+      "id": "lock",
+      "label": "画面をロック",
+      "platform": "linux",
+      "command": "loginctl",
+      "args": ["lock-session"]
+    },
+
+    {
+      "id": "sleep",
+      "label": "スリープ",
+      "platform": "win32",
+      "command": "rundll32",
+      "args": ["powrprof.dll,SetSuspendState", "0,1,0"]
+    },
+    {
+      "id": "sleep",
+      "label": "スリープ",
+      "platform": "darwin",
+      "command": "pmset",
+      "args": ["sleepnow"]
+    },
+    {
+      "id": "sleep",
+      "label": "スリープ",
+      "platform": "linux",
+      "command": "systemctl",
+      "args": ["suspend"]
+    },
+
+    {
+      "id": "volume-up",
+      "label": "音量を上げる",
+      "platform": "win32",
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-Command",
+        "$w = New-Object -ComObject WScript.Shell; 1..5 | ForEach-Object { $w.SendKeys([char]175) }"
+      ]
+    },
+    {
+      "id": "volume-up",
+      "label": "音量を上げる",
+      "platform": "darwin",
+      "command": "osascript",
+      "args": ["-e", "set volume output volume ((output volume of (get volume settings)) + 20)"]
+    },
+    {
+      "id": "volume-up",
+      "label": "音量を上げる",
+      "platform": "linux",
+      "command": "pactl",
+      "args": ["set-sink-volume", "@DEFAULT_SINK@", "+20%"]
+    },
+
+    {
+      "id": "unmute",
+      "label": "ミュート解除",
+      "platform": "win32",
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-Command",
+        "(New-Object -ComObject WScript.Shell).SendKeys([char]173)"
+      ]
+    },
+    {
+      "id": "unmute",
+      "label": "ミュート解除",
+      "platform": "darwin",
+      "command": "osascript",
+      "args": ["-e", "set volume without output muted"]
+    },
+    {
+      "id": "unmute",
+      "label": "ミュート解除",
+      "platform": "linux",
+      "command": "pactl",
+      "args": ["set-sink-mute", "@DEFAULT_SINK@", "0"]
+    },
+
+    {
+      "id": "open-news",
+      "label": "ニュースを開く",
+      "platform": "win32",
+      "command": "cmd",
+      "args": ["/c", "start", "", "https://news.yahoo.co.jp/"]
+    },
+    {
+      "id": "open-news",
+      "label": "ニュースを開く",
+      "platform": "darwin",
+      "command": "open",
+      "args": ["https://news.yahoo.co.jp/"]
+    },
+    {
+      "id": "open-news",
+      "label": "ニュースを開く",
+      "platform": "linux",
+      "command": "xdg-open",
+      "args": ["https://news.yahoo.co.jp/"]
+    },
+
+    {
+      "id": "status",
+      "label": "PCの状態を見る",
+      "platform": "win32",
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-Command",
+        "Get-CimInstance Win32_OperatingSystem | Select-Object -Property LastBootUpTime, FreePhysicalMemory | Format-List | Out-String"
+      ]
+    },
+    {
+      "id": "status",
+      "label": "PCの状態を見る",
+      "platform": ["darwin", "linux"],
+      "command": "uptime",
+      "args": []
+    }
+  ]
+}

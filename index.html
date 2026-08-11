@@ -13,11 +13,15 @@
     --btn: #1e2530;
     --btn-hover: #2a3340;
     --danger: #ff5b6e;
+    --ok: #6fd08c;
+    --line: #2a3340;
   }
   * { box-sizing: border-box; }
+  /* display を指定したクラス（.settings 等）に hidden 属性を効かせる */
+  [hidden] { display: none !important; }
   html, body {
     margin: 0;
-    height: 100%;
+    min-height: 100%;
     background: var(--bg);
     color: var(--fg);
     font-family: system-ui, -apple-system, "Segoe UI", "Hiragino Kaku Gothic ProN", sans-serif;
@@ -52,7 +56,29 @@
   .date {
     color: var(--muted);
     font-size: 14px;
-    margin-bottom: 36px;
+    margin-bottom: 24px;
+  }
+  .tabs {
+    display: inline-flex;
+    gap: 4px;
+    padding: 4px;
+    background: var(--btn);
+    border-radius: 999px;
+    margin-bottom: 28px;
+  }
+  .tab {
+    background: transparent;
+    color: var(--muted);
+    border: none;
+    border-radius: 999px;
+    padding: 8px 20px;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  .tab.active {
+    background: var(--accent);
+    color: #0a1018;
+    font-weight: 600;
   }
   .field {
     display: flex;
@@ -68,7 +94,7 @@
   input[type="time"] {
     background: var(--btn);
     color: var(--fg);
-    border: 1px solid #2a3340;
+    border: 1px solid var(--line);
     border-radius: 10px;
     padding: 12px 16px;
     font-size: 24px;
@@ -78,6 +104,20 @@
     color-scheme: dark;
   }
   input[type="time"]:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+  input[type="text"], input[type="password"] {
+    background: var(--btn);
+    color: var(--fg);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 14px;
+    width: 100%;
+    color-scheme: dark;
+  }
+  input[type="text"]:focus, input[type="password"]:focus {
     outline: none;
     border-color: var(--accent);
   }
@@ -98,14 +138,94 @@
     transition: background 0.15s ease;
   }
   button:hover { background: var(--btn-hover); }
+  button:disabled { opacity: 0.4; cursor: not-allowed; }
   button.primary { background: var(--accent); color: #0a1018; font-weight: 600; }
   button.primary:hover { background: #9ad3ff; }
+  button.primary:disabled:hover { background: var(--accent); }
+
+  .conn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 6px 14px;
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 14px;
+  }
+  .conn span.pair { display: inline-flex; align-items: center; gap: 6px; }
+  .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--muted);
+    flex: none;
+  }
+  .dot.on { background: var(--ok); }
+  .dot.off { background: var(--danger); }
+  .link {
+    background: none;
+    color: var(--accent);
+    padding: 0;
+    font-size: 13px;
+    text-decoration: underline;
+  }
+  .link:hover { background: none; }
+
+  .settings {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    text-align: left;
+    background: #161c25;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 14px;
+    margin-bottom: 18px;
+  }
+  .settings label { font-size: 12px; }
+  .settings .hint { color: var(--muted); font-size: 11px; line-height: 1.5; }
+
+  .tasks {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 8px;
+    margin-top: 20px;
+  }
+  .tasks button { padding: 12px 10px; font-size: 14px; }
+  .tasks-title {
+    color: var(--muted);
+    font-size: 12px;
+    text-align: left;
+    margin-top: 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .taskout {
+    background: #0c1017;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    color: var(--muted);
+    font-size: 12px;
+    text-align: left;
+    padding: 10px 12px;
+    margin-top: 12px;
+    max-height: 200px;
+    overflow: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .taskout.ok { color: var(--fg); }
+  .taskout.ng { color: var(--danger); }
+
   .status {
     margin-top: 24px;
     color: var(--accent);
     font-size: 14px;
     min-height: 20px;
   }
+  .status.error { color: var(--danger); }
   .stop {
     display: none;
     margin-top: 32px;
@@ -125,6 +245,32 @@
   <div class="clock" id="clock">--:--:--</div>
   <div class="date" id="date"></div>
 
+  <div class="tabs">
+    <button class="tab active" id="tabLocal">ローカル</button>
+    <button class="tab" id="tabRemote">リモート</button>
+  </div>
+
+  <section id="remoteHeader" hidden>
+    <div class="conn">
+      <span class="pair"><span class="dot" id="relayDot"></span><span id="relayLabel">リレー未接続</span></span>
+      <span class="pair"><span class="dot" id="pcDot"></span><span id="pcLabel">自宅PC 不明</span></span>
+      <button class="link" id="settingsBtn">設定</button>
+    </div>
+
+    <div class="settings" id="settings" hidden>
+      <label for="relayUrl">中継サーバーの URL</label>
+      <input type="text" id="relayUrl" placeholder="https://your-relay.example.com"
+             autocomplete="off" autocapitalize="off" spellcheck="false" />
+      <label for="relayToken">トークン</label>
+      <input type="password" id="relayToken" placeholder="ALARM_TOKEN と同じ文字列" autocomplete="off" />
+      <div class="hint">自宅PCのエージェントと中継サーバーに設定したものと同じトークンを入れてください。この端末のブラウザにのみ保存されます。</div>
+      <div class="buttons">
+        <button class="primary" id="connectBtn">接続</button>
+        <button id="forgetBtn">保存を消す</button>
+      </div>
+    </div>
+  </section>
+
   <div class="field">
     <label for="alarmTime">アラーム時刻</label>
     <input type="time" id="alarmTime" />
@@ -134,78 +280,88 @@
     </div>
   </div>
 
+  <section id="remotePanel" hidden>
+    <div class="tasks-title">
+      <span>自宅PCの作業</span>
+      <button class="link" id="reloadTasksBtn">再読み込み</button>
+    </div>
+    <div class="tasks" id="tasks"></div>
+    <pre class="taskout" id="taskOut" hidden></pre>
+  </section>
+
   <div class="status" id="status"></div>
   <button class="stop" id="stopBtn">停止</button>
 </main>
 
 <script>
-  const clockEl = document.getElementById("clock");
-  const dateEl = document.getElementById("date");
-  const inputEl = document.getElementById("alarmTime");
-  const setBtn = document.getElementById("setBtn");
-  const clearBtn = document.getElementById("clearBtn");
-  const stopBtn = document.getElementById("stopBtn");
-  const statusEl = document.getElementById("status");
+(() => {
+  "use strict";
 
-  let alarmTime = null;
-  let lastFiredKey = null;
+  const $ = (id) => document.getElementById(id);
+  const clockEl = $("clock");
+  const dateEl = $("date");
+  const inputEl = $("alarmTime");
+  const setBtn = $("setBtn");
+  const clearBtn = $("clearBtn");
+  const stopBtn = $("stopBtn");
+  const statusEl = $("status");
+  const tabLocal = $("tabLocal");
+  const tabRemote = $("tabRemote");
+  const remoteHeader = $("remoteHeader");
+  const remotePanel = $("remotePanel");
+  const settingsEl = $("settings");
+  const settingsBtn = $("settingsBtn");
+  const relayUrlEl = $("relayUrl");
+  const relayTokenEl = $("relayToken");
+  const connectBtn = $("connectBtn");
+  const forgetBtn = $("forgetBtn");
+  const relayDot = $("relayDot");
+  const relayLabel = $("relayLabel");
+  const pcDot = $("pcDot");
+  const pcLabel = $("pcLabel");
+  const tasksEl = $("tasks");
+  const taskOutEl = $("taskOut");
+  const reloadTasksBtn = $("reloadTasksBtn");
+
+  const pad = (n) => String(n).padStart(2, "0");
+  const store = {
+    get(k, d) { try { return localStorage.getItem(k) ?? d; } catch { return d; } },
+    set(k, v) { try { localStorage.setItem(k, v); } catch { /* プライベートモード等 */ } },
+    del(k) { try { localStorage.removeItem(k); } catch { /* noop */ } },
+  };
+
+  let mode = store.get("sa.mode", "local") === "remote" ? "remote" : "local";
+
+  /* ---------------- 音 ---------------- */
+
   let audioCtx = null;
   let beepTimer = null;
 
-  const pad = (n) => String(n).padStart(2, "0");
-
-  function tick() {
-    const now = new Date();
-    const hh = pad(now.getHours());
-    const mm = pad(now.getMinutes());
-    const ss = pad(now.getSeconds());
-    clockEl.textContent = `${hh}:${mm}:${ss}`;
-    dateEl.textContent = now.toLocaleDateString("ja-JP", {
-      year: "numeric", month: "long", day: "numeric", weekday: "long",
-    });
-
-    if (alarmTime && !document.body.classList.contains("ringing")) {
-      const cur = `${hh}:${mm}`;
-      const key = `${now.toDateString()} ${cur}`;
-      if (cur === alarmTime && ss === "00" && lastFiredKey !== key) {
-        lastFiredKey = key;
-        ring();
-      }
+  function unlockAudio() {
+    if (!audioCtx) {
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if (Ctx) audioCtx = new Ctx();
     }
+    if (audioCtx && audioCtx.state === "suspended") audioCtx.resume();
   }
 
-  function ring() {
-    document.body.classList.add("ringing");
-    statusEl.textContent = "⏰ アラーム！";
-    startBeep();
-  }
-
-  function stopRing() {
-    document.body.classList.remove("ringing");
-    stopBeep();
-    if (alarmTime) {
-      statusEl.textContent = `セット中: ${alarmTime}`;
-    } else {
-      statusEl.textContent = "";
-    }
+  function playTone() {
+    if (!audioCtx) return;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = "sine";
+    osc.frequency.value = 880;
+    gain.gain.setValueAtTime(0, audioCtx.currentTime);
+    gain.gain.linearRampToValueAtTime(0.25, audioCtx.currentTime + 0.02);
+    gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.4);
+    osc.connect(gain).connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.4);
   }
 
   function startBeep() {
-    if (!audioCtx) {
-      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    }
-    const playTone = () => {
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.type = "sine";
-      osc.frequency.value = 880;
-      gain.gain.setValueAtTime(0, audioCtx.currentTime);
-      gain.gain.linearRampToValueAtTime(0.25, audioCtx.currentTime + 0.02);
-      gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.4);
-      osc.connect(gain).connect(audioCtx.destination);
-      osc.start();
-      osc.stop(audioCtx.currentTime + 0.4);
-    };
+    if (beepTimer) return;
+    unlockAudio();
     playTone();
     beepTimer = setInterval(playTone, 800);
   }
@@ -217,29 +373,353 @@
     }
   }
 
-  setBtn.addEventListener("click", () => {
+  function setRinging(on) {
+    document.body.classList.toggle("ringing", on);
+    if (on) startBeep();
+    else stopBeep();
+  }
+
+  /* ---------------- 時計 ---------------- */
+
+  function tick() {
+    const now = new Date();
+    const hh = pad(now.getHours());
+    const mm = pad(now.getMinutes());
+    const ss = pad(now.getSeconds());
+    clockEl.textContent = `${hh}:${mm}:${ss}`;
+    dateEl.textContent = now.toLocaleDateString("ja-JP", {
+      year: "numeric", month: "long", day: "numeric", weekday: "long",
+    });
+    if (mode === "local") local.check(now, hh, mm, ss);
+  }
+
+  /* ---------------- ローカルモード ---------------- */
+
+  const local = {
+    alarmTime: null,
+    lastFiredKey: null,
+
+    check(now, hh, mm, ss) {
+      if (!this.alarmTime || document.body.classList.contains("ringing")) return;
+      const cur = `${hh}:${mm}`;
+      const key = `${now.toDateString()} ${cur}`;
+      if (cur === this.alarmTime && ss === "00" && this.lastFiredKey !== key) {
+        this.lastFiredKey = key;
+        setRinging(true);
+        setStatus("⏰ アラーム！");
+      }
+    },
+
+    set(time) {
+      this.alarmTime = time;
+      this.lastFiredKey = null;
+      unlockAudio();
+      setStatus(`セット中: ${time}`);
+    },
+
+    clear() {
+      this.alarmTime = null;
+      this.lastFiredKey = null;
+      setRinging(false);
+      setStatus("");
+    },
+
+    stop() {
+      setRinging(false);
+      setStatus(this.alarmTime ? `セット中: ${this.alarmTime}` : "");
+    },
+  };
+
+  /* ---------------- リモートモード ---------------- */
+
+  const remote = {
+    url: store.get("sa.relayUrl", "") || defaultRelayUrl(),
+    token: store.get("sa.token", ""),
+    es: null,
+    pcOnline: false,
+    relayOnline: false,
+    state: null,
+    renderedTasks: "",
+
+    connect() {
+      this.disconnect();
+      if (!this.url || !this.token) {
+        setStatus("中継サーバーの URL とトークンを設定してください", true);
+        settingsEl.hidden = false;
+        return;
+      }
+      const src = `${this.url}/api/events?role=phone&token=${encodeURIComponent(this.token)}`;
+      let es;
+      try {
+        es = new EventSource(src);
+      } catch (e) {
+        setStatus(`接続できません: ${e.message}`, true);
+        return;
+      }
+      this.es = es;
+      setStatus("接続中…");
+
+      es.addEventListener("hello", (ev) => {
+        this.relayOnline = true;
+        const data = safeParse(ev.data);
+        this.pcOnline = !!(data && data.presence && data.presence.pc > 0);
+        setStatus("");
+        this.render();
+      });
+      es.addEventListener("presence", (ev) => {
+        const data = safeParse(ev.data);
+        this.pcOnline = !!(data && data.pc > 0);
+        this.render();
+      });
+      es.addEventListener("state", (ev) => {
+        this.state = safeParse(ev.data);
+        this.render();
+      });
+      es.onerror = () => {
+        // EventSource は自動で再接続する
+        this.relayOnline = false;
+        this.pcOnline = false;
+        this.render();
+      };
+    },
+
+    disconnect() {
+      if (this.es) {
+        this.es.close();
+        this.es = null;
+      }
+      this.relayOnline = false;
+      this.pcOnline = false;
+      this.state = null;
+      if (mode === "remote") this.render();
+    },
+
+    async send(type, payload) {
+      if (!this.url || !this.token) {
+        setStatus("接続設定が未入力です", true);
+        return false;
+      }
+      try {
+        const res = await fetch(`${this.url}/api/command`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${this.token}` },
+          body: JSON.stringify({ type, payload: payload ?? null }),
+        });
+        if (res.status === 401) {
+          setStatus("トークンが違います", true);
+          return false;
+        }
+        if (!res.ok) {
+          setStatus(`送信に失敗しました (HTTP ${res.status})`, true);
+          return false;
+        }
+        const json = await res.json().catch(() => ({}));
+        if (json.delivered === 0) {
+          setStatus("自宅PCがオフラインです", true);
+          return false;
+        }
+        return true;
+      } catch (e) {
+        setStatus(`送信に失敗しました: ${e.message}`, true);
+        return false;
+      }
+    },
+
+    render() {
+      relayDot.className = `dot ${this.relayOnline ? "on" : "off"}`;
+      relayLabel.textContent = this.relayOnline ? "リレー接続中" : "リレー未接続";
+      pcDot.className = `dot ${this.pcOnline ? "on" : "off"}`;
+
+      const st = this.state;
+      pcLabel.textContent = this.pcOnline
+        ? `自宅PC ${st && st.pc ? st.pc.hostname : "オンライン"}`
+        : "自宅PC オフライン";
+
+      const usable = this.relayOnline && this.pcOnline;
+      setBtn.disabled = !usable;
+      clearBtn.disabled = !usable;
+      reloadTasksBtn.disabled = !usable;
+
+      const ringing = !!(st && st.alarm && st.alarm.ringing);
+      setRinging(ringing);
+
+      if (ringing) {
+        setStatus("⏰ 自宅PCで鳴っています");
+      } else if (st && st.alarm && st.alarm.time) {
+        setStatus(`自宅PCにセット中: ${st.alarm.time}`);
+      } else if (usable) {
+        setStatus("");
+      } else if (this.relayOnline) {
+        setStatus("自宅PCがオフラインです", true);
+      }
+
+      this.renderTasks(st);
+      this.renderTaskOutput(st);
+    },
+
+    renderTasks(st) {
+      const list = (st && Array.isArray(st.tasks) ? st.tasks : []);
+      const signature = JSON.stringify(list);
+      if (signature === this.renderedTasks) {
+        for (const b of tasksEl.querySelectorAll("button")) b.disabled = !this.pcOnline;
+        return;
+      }
+      this.renderedTasks = signature;
+      tasksEl.textContent = "";
+
+      if (!list.length) {
+        const p = document.createElement("div");
+        p.className = "hint";
+        p.style.color = "var(--muted)";
+        p.style.fontSize = "12px";
+        p.textContent = this.pcOnline
+          ? "登録された作業がありません。自宅PCの agent/tasks.json に追加してください。"
+          : "自宅PCに接続すると、登録した作業がここに並びます。";
+        tasksEl.appendChild(p);
+        return;
+      }
+
+      for (const t of list) {
+        const b = document.createElement("button");
+        b.textContent = t.label || t.id;
+        b.disabled = !this.pcOnline;
+        // 進捗と結果は下の出力欄（lastTask）に出るので、ここでは状態行を触らない
+        b.addEventListener("click", () => this.send("task.run", { id: t.id }));
+        tasksEl.appendChild(b);
+      }
+    },
+
+    renderTaskOutput(st) {
+      const lt = st && st.lastTask;
+      if (!lt) {
+        taskOutEl.hidden = true;
+        return;
+      }
+      taskOutEl.hidden = false;
+      if (lt.running) {
+        taskOutEl.className = "taskout";
+        taskOutEl.textContent = `${lt.label}: 実行中…`;
+        return;
+      }
+      taskOutEl.className = `taskout ${lt.ok ? "ok" : "ng"}`;
+      taskOutEl.textContent = `${lt.label}: ${lt.ok ? "成功" : "失敗"}\n${lt.output || ""}`.trimEnd();
+    },
+  };
+
+  function defaultRelayUrl() {
+    // 中継サーバー自身から配信されている場合は、その場所を初期値にする
+    if (location.protocol === "http:" || location.protocol === "https:") return location.origin;
+    return "";
+  }
+
+  function safeParse(s) {
+    try { return JSON.parse(s); } catch { return null; }
+  }
+
+  /* ---------------- 共通 UI ---------------- */
+
+  function setStatus(text, isError) {
+    statusEl.textContent = text;
+    statusEl.classList.toggle("error", !!isError);
+  }
+
+  function applyMode(next) {
+    mode = next;
+    store.set("sa.mode", mode);
+    tabLocal.classList.toggle("active", mode === "local");
+    tabRemote.classList.toggle("active", mode === "remote");
+    remoteHeader.hidden = mode !== "remote";
+    remotePanel.hidden = mode !== "remote";
+
+    setRinging(false);
+    setStatus("");
+
+    if (mode === "remote") {
+      relayUrlEl.value = remote.url;
+      relayTokenEl.value = remote.token;
+      setBtn.disabled = true;
+      clearBtn.disabled = true;
+      if (remote.url && remote.token) {
+        remote.connect();
+      } else {
+        settingsEl.hidden = false;
+        remote.render();
+      }
+    } else {
+      remote.disconnect();
+      setBtn.disabled = false;
+      clearBtn.disabled = false;
+      if (local.alarmTime) setStatus(`セット中: ${local.alarmTime}`);
+    }
+  }
+
+  tabLocal.addEventListener("click", () => applyMode("local"));
+  tabRemote.addEventListener("click", () => applyMode("remote"));
+
+  settingsBtn.addEventListener("click", () => {
+    settingsEl.hidden = !settingsEl.hidden;
+  });
+
+  connectBtn.addEventListener("click", () => {
+    remote.url = relayUrlEl.value.trim().replace(/\/+$/, "");
+    remote.token = relayTokenEl.value;
+    store.set("sa.relayUrl", remote.url);
+    store.set("sa.token", remote.token);
+    relayUrlEl.value = remote.url;
+    settingsEl.hidden = true;
+    unlockAudio();
+    remote.connect();
+  });
+
+  forgetBtn.addEventListener("click", () => {
+    remote.disconnect();
+    remote.url = defaultRelayUrl();
+    remote.token = "";
+    store.del("sa.relayUrl");
+    store.del("sa.token");
+    relayUrlEl.value = remote.url;
+    relayTokenEl.value = "";
+    setStatus("保存した接続設定を消しました");
+  });
+
+  reloadTasksBtn.addEventListener("click", () => remote.send("tasks.reload"));
+
+  setBtn.addEventListener("click", async () => {
     const v = inputEl.value;
     if (!v) {
-      statusEl.textContent = "時刻を入力してください";
+      setStatus("時刻を入力してください", true);
       return;
     }
-    alarmTime = v;
-    lastFiredKey = null;
-    statusEl.textContent = `セット中: ${alarmTime}`;
-    if (audioCtx && audioCtx.state === "suspended") audioCtx.resume();
+    unlockAudio();
+    if (mode === "local") {
+      local.set(v);
+    } else if (await remote.send("alarm.set", { time: v })) {
+      setStatus(`自宅PCにセット: ${v}`);
+    }
   });
 
-  clearBtn.addEventListener("click", () => {
-    alarmTime = null;
-    lastFiredKey = null;
-    if (document.body.classList.contains("ringing")) stopRing();
-    statusEl.textContent = "";
+  clearBtn.addEventListener("click", async () => {
+    if (mode === "local") {
+      local.clear();
+    } else if (await remote.send("alarm.clear")) {
+      setStatus("自宅PCのアラームを解除しました");
+    }
   });
 
-  stopBtn.addEventListener("click", stopRing);
+  stopBtn.addEventListener("click", async () => {
+    if (mode === "local") {
+      local.stop();
+    } else {
+      // 手元の音はすぐ止め、PC側へは停止コマンドを送る
+      setRinging(false);
+      await remote.send("alarm.stop");
+    }
+  });
 
   tick();
   setInterval(tick, 1000);
+  applyMode(mode);
+})();
 </script>
 </body>
 </html>

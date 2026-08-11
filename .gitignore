@@ -1,0 +1,6 @@
+# 自分用の作業定義。実行するコマンドが入るのでコミットしない。
+agent/tasks.json
+
+node_modules/
+*.log
+.DS_Store
