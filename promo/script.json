@@ -1,0 +1,54 @@
+{
+  "title": "SneakDraw 30秒プロモーション動画",
+  "site": "https://gachasni.com/",
+  "voice": "ja-JP-NanamiNeural",
+  "rate": "+15%",
+  "pitch": "+0Hz",
+  "fps": 30,
+  "width": 1920,
+  "height": 1080,
+  "lines": [
+    {
+      "id": "l1",
+      "scene": "hook",
+      "speak": "欲しい一足は、いつも抽選で終わる。",
+      "sub": "欲しい一足は、いつも抽選で終わる。"
+    },
+    {
+      "id": "l2",
+      "scene": "brand",
+      "speak": "スニークドローなら、1回100ポイントから。",
+      "sub": "SneakDrawなら、1回100ポイントから。"
+    },
+    {
+      "id": "l3",
+      "scene": "lineup",
+      "speak": "トラヴィス、ハイブランド、ポケカ、最新ガジェット。",
+      "sub": "トラヴィス、ハイブランド、ポケカ、最新ガジェット。"
+    },
+    {
+      "id": "l4",
+      "scene": "ui",
+      "speak": "S賞からラストワン賞まで、残り本数はリアルタイム表示。",
+      "sub": "S賞からラストワン賞まで、残り本数はリアルタイム表示。"
+    },
+    {
+      "id": "l5",
+      "scene": "pointback",
+      "speak": "C賞はポイント還元。最後まで狙える。",
+      "sub": "C賞はポイント還元。最後まで狙える。"
+    },
+    {
+      "id": "l6",
+      "scene": "tagline",
+      "speak": "欲しいスニーカーに、いちばん近いクジ。",
+      "sub": "欲しいスニーカーに、いちばん近いクジ。"
+    },
+    {
+      "id": "l7",
+      "scene": "cta",
+      "speak": "スニークドロー。ガチャスニ、ドットコム。",
+      "sub": "SneakDraw / gachasni.com"
+    }
+  ]
+}

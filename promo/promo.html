@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>SneakDraw promo renderer</title>
+<style>
+  @font-face { font-family:'NSJP'; src:url('work/fonts/notosansjp-400.ttf'); font-weight:400; }
+  @font-face { font-family:'NSJP'; src:url('work/fonts/notosansjp-700.ttf'); font-weight:700; }
+  @font-face { font-family:'NSJP'; src:url('work/fonts/notosansjp-900.ttf'); font-weight:900; }
+  @font-face { font-family:'ZKG'; src:url('work/fonts/zenkaku-700.ttf'); font-weight:700; }
+  @font-face { font-family:'ZKG'; src:url('work/fonts/zenkaku-900.ttf'); font-weight:900; }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body { background:#000; overflow:hidden; }
+  body { width:1920px; height:1080px; }
+
+  #stage {
+    position:relative; width:1920px; height:1080px; overflow:hidden;
+    background:#05050a; font-family:'NSJP', sans-serif; color:#fff;
+    -webkit-font-smoothing:antialiased;
+  }
+  .scene { position:absolute; inset:0; opacity:0; will-change:opacity, transform; }
+  .layer { position:absolute; inset:0; }
+
+  /* ---------- 共通の背景効果 ---------- */
+  #bgGlow {
+    position:absolute; left:50%; top:50%; width:2600px; height:2600px;
+    transform:translate(-50%,-50%);
+    background:radial-gradient(circle at 50% 50%,
+      rgba(255,178,44,.30) 0%, rgba(255,88,44,.13) 26%,
+      rgba(120,20,40,.10) 46%, rgba(0,0,0,0) 68%);
+  }
+  #vignette {
+    position:absolute; inset:0; pointer-events:none;
+    background:radial-gradient(ellipse at 50% 48%,
+      rgba(0,0,0,0) 42%, rgba(0,0,0,.55) 78%, rgba(0,0,0,.88) 100%);
+  }
+  #grain {
+    position:absolute; inset:-200px; pointer-events:none; opacity:.14;
+    background-repeat:repeat;
+  }
+  #flash { position:absolute; inset:0; background:#fff; opacity:0; pointer-events:none; }
+  #fade  { position:absolute; inset:0; background:#000; opacity:0; pointer-events:none; }
+  .streak {
+    position:absolute; height:3px; filter:blur(2px); left:-10%; width:120%;
+    background:linear-gradient(90deg, rgba(255,200,80,0) 0%, rgba(255,214,120,.75) 50%, rgba(255,200,80,0) 100%);
+  }
+
+  /* ---------- 字幕 ---------- */
+  #subWrap { position:absolute; left:0; right:0; bottom:74px; text-align:center; }
+  #sub {
+    display:inline-block; font-family:'ZKG', sans-serif; font-weight:900;
+    font-size:56px; letter-spacing:.02em; color:#ffdc3d; line-height:1.25;
+    padding:0 40px;
+    text-shadow:
+      -6px -6px 0 #000,  6px -6px 0 #000, -6px 6px 0 #000, 6px 6px 0 #000,
+      -7px 0 0 #000, 7px 0 0 #000, 0 -7px 0 #000, 0 7px 0 #000,
+      0 10px 26px rgba(0,0,0,.85);
+  }
+
+  /* ---------- S1 フック ---------- */
+  #s1Photo {
+    position:absolute; left:50%; top:46%; width:2700px;
+    transform:translate(-50%,-50%); filter:grayscale(.6) brightness(.5) contrast(1.15);
+  }
+  #s1Ticker {
+    position:absolute; left:0; top:50%; white-space:nowrap;
+    font-family:'ZKG',sans-serif; font-weight:900; font-size:260px;
+    color:rgba(255,255,255,.05); letter-spacing:.08em; transform:translateY(-50%);
+  }
+  #s1Spot {
+    position:absolute; left:50%; top:44%; width:1500px; height:1100px;
+    transform:translate(-50%,-50%);
+    background:radial-gradient(ellipse at 50% 50%, rgba(255,190,90,.20) 0%, rgba(0,0,0,0) 62%);
+  }
+  #s1Stamp {
+    position:absolute; left:50%; top:31%; transform:translate(-50%,-50%) rotate(-7deg);
+    font-family:'ZKG',sans-serif; font-weight:900; font-size:120px; letter-spacing:.12em;
+    color:rgba(255,60,74,.0); border:10px solid rgba(255,60,74,0); padding:8px 34px; border-radius:12px;
+  }
+
+  /* ---------- S2 ブランド ---------- */
+  .center { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); }
+  .logo {
+    font-family:'ZKG',sans-serif; font-weight:900; letter-spacing:.06em;
+    background:linear-gradient(180deg,#fff6d8 0%,#ffd464 42%,#e0a017 62%,#fff3cf 100%);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+    filter:drop-shadow(0 8px 26px rgba(255,175,40,.45));
+  }
+  #s2Logo { font-size:172px; }
+  #s2Sub {
+    font-family:'NSJP',sans-serif; font-weight:700; font-size:40px; letter-spacing:.42em;
+    color:#f4e3bd; text-indent:.42em;
+  }
+  #s2Ring {
+    position:absolute; left:50%; top:50%; width:520px; height:520px; margin:-260px 0 0 -260px;
+    border:4px solid rgba(255,205,90,.85); border-radius:50%;
+  }
+  #s2Coin { position:absolute; width:230px; left:50%; top:50%; }
+  #s2Badge {
+    position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+    background:linear-gradient(135deg,#ff3b46,#ff8a1f); color:#fff;
+    font-family:'ZKG',sans-serif; font-weight:900; font-size:52px;
+    padding:16px 40px; border-radius:999px; box-shadow:0 14px 40px rgba(255,70,60,.45);
+    white-space:nowrap;
+  }
+  .spark { position:absolute; width:12px; height:12px; border-radius:50%; background:#ffd977;
+           box-shadow:0 0 18px rgba(255,205,100,.9); }
+
+  /* ---------- S3 ラインナップ ---------- */
+  .rowWrap { position:absolute; left:0; width:1920px; height:302px; overflow:hidden; }
+  .row { position:absolute; left:0; top:0; display:flex; gap:26px; }
+  .card {
+    width:400px; height:300px; border-radius:16px; overflow:hidden; flex:0 0 auto;
+    box-shadow:0 18px 44px rgba(0,0,0,.6); border:2px solid rgba(255,205,110,.30);
+    background:#111;
+  }
+  .card img { width:100%; height:100%; object-fit:cover; display:block; }
+  #s3Chips {
+    position:absolute; left:0; right:0; bottom:172px; display:flex; justify-content:center; gap:18px;
+  }
+  .chip {
+    font-family:'NSJP',sans-serif; font-weight:700; font-size:30px; color:#ffe6ab;
+    border:2px solid rgba(255,206,110,.65); border-radius:999px; padding:10px 26px;
+    background:rgba(30,18,6,.72); white-space:nowrap;
+  }
+  #s3Title {
+    position:absolute; left:0; right:0; top:78px; text-align:center;
+    font-family:'ZKG',sans-serif; font-weight:900; font-size:64px; letter-spacing:.08em;
+    color:#fff; text-shadow:0 8px 30px rgba(0,0,0,.8);
+  }
+
+  /* ---------- S4 アプリUI ---------- */
+  #phone {
+    position:absolute; left:352px; top:104px; width:404px; height:830px;
+    border-radius:52px; background:#0d0f14; border:10px solid #23262e;
+    box-shadow:0 34px 90px rgba(0,0,0,.75), 0 0 0 2px rgba(255,205,110,.16);
+    overflow:hidden;
+  }
+  #phoneHead {
+    height:74px; display:flex; align-items:center; justify-content:center;
+    background:#12151c; border-bottom:1px solid rgba(255,255,255,.08);
+    font-family:'ZKG',sans-serif; font-weight:900; font-size:28px; letter-spacing:.05em; color:#f7e2b4;
+  }
+  #phoneBody { padding:18px; }
+  #uiThumb { width:100%; border-radius:12px; display:block; }
+  .uiMetaRow { display:flex; justify-content:space-between; align-items:center; margin-top:16px;
+               font-family:'NSJP',sans-serif; font-size:22px; color:#c9d0dc; }
+  .uiNum { color:#fff; font-weight:900; font-size:26px; }
+  #uiBarOuter { margin-top:10px; height:12px; border-radius:999px; background:#242a35; overflow:hidden; }
+  #uiBar { height:100%; width:100%; background:linear-gradient(90deg,#ffcf4a,#ff7a2f); }
+  .uiBtn {
+    margin-top:16px; height:64px; border-radius:14px; display:flex; align-items:center; justify-content:center;
+    font-family:'ZKG',sans-serif; font-weight:900; font-size:30px; color:#2a1600;
+    background:linear-gradient(180deg,#ffd968,#f2a721); box-shadow:0 8px 22px rgba(240,160,30,.35);
+  }
+  .uiBtn.sub { background:linear-gradient(180deg,#2b313d,#1c212a); color:#ffd98a; }
+  #uiCoin { width:26px; vertical-align:-5px; margin:0 4px; }
+  #uiRipple {
+    position:absolute; left:50%; top:0; width:40px; height:40px; border-radius:50%;
+    background:rgba(255,255,255,.55); transform:translate(-50%,-50%) scale(0); opacity:0;
+  }
+
+  #ranks { position:absolute; left:900px; top:150px; width:800px; }
+  #ranksTitle {
+    font-family:'ZKG',sans-serif; font-weight:900; font-size:52px; color:#fff; margin-bottom:26px;
+    letter-spacing:.04em;
+  }
+  .rankRow { display:flex; align-items:center; gap:26px; height:104px; }
+  .rankRow img.badge { height:82px; }
+  .rankRow .rankNote {
+    font-family:'NSJP',sans-serif; font-weight:700; font-size:34px; color:#e9dcc3;
+  }
+  .rankRow .bar { flex:1; height:3px; background:linear-gradient(90deg,rgba(255,205,110,.6),rgba(255,205,110,0)); }
+
+  /* ---------- S5 ポイント還元 ---------- */
+  #s5Card { position:absolute; left:50%; top:47%; width:820px; transform:translate(-50%,-50%);
+            border-radius:20px; overflow:hidden; box-shadow:0 30px 80px rgba(0,0,0,.7);
+            border:2px solid rgba(255,205,110,.35); }
+  #s5Card img { width:100%; display:block; }
+  #s5Key {
+    position:absolute; left:0; right:0; top:132px; text-align:center;
+    font-family:'ZKG',sans-serif; font-weight:900; font-size:96px; letter-spacing:.05em;
+    color:#fff; text-shadow:0 10px 34px rgba(0,0,0,.85);
+  }
+  #s5KeyLine { position:absolute; left:50%; top:250px; height:8px; width:0; transform:translateX(-50%);
+               background:linear-gradient(90deg,#ffcf4a,#ff7a2f); border-radius:99px; }
+  #s5Last {
+    position:absolute; left:50%; bottom:212px; transform:translateX(-50%);
+    display:flex; align-items:center; gap:20px;
+  }
+  #s5Last img { height:64px; filter:brightness(0) invert(1) drop-shadow(0 0 12px rgba(255,205,110,.7)); }
+  #s5Last span { font-family:'NSJP',sans-serif; font-weight:700; font-size:36px; color:#ffe6ab; }
+  .orbCoin { position:absolute; width:120px; left:50%; top:47%; }
+
+  /* ---------- S6 タグライン ---------- */
+  #s6Bg { position:absolute; left:50%; top:50%; width:2400px; transform:translate(-50%,-50%);
+          filter:grayscale(1) brightness(.30); }
+  #s6Text {
+    position:absolute; left:0; right:0; top:50%; transform:translateY(-50%); text-align:center;
+    font-family:'ZKG',sans-serif; font-weight:900; font-size:104px; letter-spacing:.03em;
+    line-height:1.4; color:#fff;
+  }
+  #s6Text .hi {
+    background:linear-gradient(180deg,#fff3cf,#ffc94b);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+  #s6Mask { position:absolute; right:0; top:0; bottom:0; background:#05050a; }
+
+  /* ---------- S7 CTA ---------- */
+  #s7Logo { font-size:200px; }
+  #s7Shine {
+    position:absolute; left:0; top:0; width:340px; height:100%;
+    background:linear-gradient(105deg, rgba(255,255,255,0) 0%, rgba(255,255,255,.75) 50%, rgba(255,255,255,0) 100%);
+    mix-blend-mode:overlay;
+  }
+  #s7Url {
+    font-family:'ZKG',sans-serif; font-weight:900; font-size:62px; letter-spacing:.06em; color:#0f0b04;
+    background:linear-gradient(180deg,#ffe08a,#f0a91e); padding:18px 56px; border-radius:999px;
+    box-shadow:0 16px 44px rgba(240,170,30,.4); white-space:nowrap;
+  }
+  #s7Cats {
+    display:flex; gap:16px; justify-content:center;
+    font-family:'NSJP',sans-serif; font-weight:700; font-size:28px; color:#c8bda2;
+  }
+  #s7Tag {
+    font-family:'NSJP',sans-serif; font-weight:700; font-size:36px; letter-spacing:.16em; color:#efe0bd;
+  }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="bgGlow"></div>
+
+  <!-- ================= S1 hook ================= -->
+  <section class="scene" id="s1">
+    <div id="s1Ticker">抽選 ・ 落選 ・ 抽選 ・ 落選 ・ 抽選 ・ 落選 ・ 抽選 ・ 落選 ・</div>
+    <img id="s1Photo" src="work/assets/prize_s.png" alt="">
+    <div id="s1Spot"></div>
+    <div id="s1Stamp">また、落選。</div>
+  </section>
+
+  <!-- ================= S2 brand ================= -->
+  <section class="scene" id="s2">
+    <div id="s2Ring"></div>
+    <div id="s2Sparks"></div>
+    <img id="s2Coin" src="work/assets/coin.png" alt="">
+    <div class="center" style="text-align:center">
+      <div class="logo" id="s2Logo">SneakDraw</div>
+      <div id="s2Sub">オンラインくじ</div>
+    </div>
+    <div id="s2Badge">1回 100pt から</div>
+  </section>
+
+  <!-- ================= S3 lineup ================= -->
+  <section class="scene" id="s3">
+    <div id="s3Title">狙えるのは、この本気のラインナップ。</div>
+    <div class="rowWrap" id="s3RowWrap1" style="top:206px"><div class="row" id="s3Row1"></div></div>
+    <div class="rowWrap" id="s3RowWrap2" style="top:534px"><div class="row" id="s3Row2"></div></div>
+    <div id="s3Chips">
+      <div class="chip">スニーカー</div>
+      <div class="chip">アパレル</div>
+      <div class="chip">ホビー</div>
+      <div class="chip">ハイブランド</div>
+      <div class="chip">期間限定</div>
+    </div>
+  </section>
+
+  <!-- ================= S4 app ui ================= -->
+  <section class="scene" id="s4">
+    <div id="phone">
+      <div id="phoneHead">SneakDraw</div>
+      <div id="phoneBody">
+        <img id="uiThumb" src="work/assets/th_travis.png" alt="">
+        <div class="uiMetaRow">
+          <div>残り：<span class="uiNum" id="uiRemain">8,289</span> / 8,289</div>
+          <div>1回 / <span class="uiNum">1,200</span><img id="uiCoin" src="work/assets/coin.png"></div>
+        </div>
+        <div id="uiBarOuter"><div id="uiBar"></div></div>
+        <div class="uiBtn" id="uiBtn1" style="position:relative; overflow:hidden">
+          1回ガチャる<div id="uiRipple"></div>
+        </div>
+        <div class="uiBtn sub">10回ガチャる</div>
+        <div class="uiBtn sub">100回ガチャる</div>
+      </div>
+    </div>
+    <div id="ranks">
+      <div id="ranksTitle">賞ランクは5段階。</div>
+      <div class="rankRow" data-i="0"><img class="badge" src="work/assets/rank_s.png"><div class="bar"></div><div class="rankNote">最上位・実物が当たる</div></div>
+      <div class="rankRow" data-i="1"><img class="badge" src="work/assets/rank_a.png"><div class="bar"></div><div class="rankNote">上位</div></div>
+      <div class="rankRow" data-i="2"><img class="badge" src="work/assets/rank_b.png"><div class="bar"></div><div class="rankNote">当たり</div></div>
+      <div class="rankRow" data-i="3"><img class="badge" src="work/assets/rank_c.png"><div class="bar"></div><div class="rankNote">ポイント還元</div></div>
+      <div class="rankRow" data-i="4"><img class="badge" src="work/assets/rank_last.png" style="filter:brightness(0) invert(1); height:auto; width:300px"><div class="bar"></div><div class="rankNote">最後の1本</div></div>
+    </div>
+  </section>
+
+  <!-- ================= S5 point back ================= -->
+  <section class="scene" id="s5">
+    <img class="orbCoin" id="s5CoinA" src="work/assets/coin.png" alt="">
+    <img class="orbCoin" id="s5CoinB" src="work/assets/coin.png" alt="">
+    <div id="s5Card"><img src="work/assets/prize_c.png" alt=""></div>
+    <div id="s5Key">ポイント還元</div>
+    <div id="s5KeyLine"></div>
+    <div id="s5Last"><img src="work/assets/rank_last.png"><span>最後の1本には、ラストワン賞。</span></div>
+  </section>
+
+  <!-- ================= S6 tagline ================= -->
+  <section class="scene" id="s6">
+    <img id="s6Bg" src="work/assets/prize_s.png" alt="">
+    <div id="s6Text">欲しいスニーカーに、<br><span class="hi">いちばん近い</span>クジ。</div>
+  </section>
+
+  <!-- ================= S7 cta ================= -->
+  <section class="scene" id="s7">
+    <div class="center" style="text-align:center; width:1600px">
+      <div style="position:relative; overflow:hidden; display:inline-block">
+        <div class="logo" id="s7Logo">SneakDraw</div>
+        <div id="s7Shine"></div>
+      </div>
+      <div id="s7Tag" style="margin-top:6px">欲しいスニーカーに、いちばん近いクジ。</div>
+      <div style="margin-top:56px"><span id="s7Url">gachasni.com</span></div>
+      <div id="s7Cats" style="margin-top:44px">
+        <span>スニーカー</span><span>/</span><span>アパレル</span><span>/</span><span>ホビー</span>
+        <span>/</span><span>ハイブランド</span><span>/</span><span>期間限定</span>
+      </div>
+    </div>
+  </section>
+
+  <div class="layer" id="streaks"></div>
+  <div id="vignette"></div>
+  <div id="grain"></div>
+  <div id="flash"></div>
+  <div id="fade"></div>
+
+  <div id="subWrap"><span id="sub"></span></div>
+</div>
+
+<script>
+/* =========================================================================
+   SneakDraw promo renderer
+   window.SEEK(t) だけで全フレームが決まる決定論的レンダラ。
+   タイムライン（ナレーションの実測尺）は capture.mjs から INIT() で注入する。
+   ========================================================================= */
+
+const $ = (s) => document.querySelector(s);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const lerp = (a, b, u) => a + (b - a) * u;
+/** a→b の進捗を 0..1 で返す */
+const prog = (t, a, b) => clamp((t - a) / (b - a), 0, 1);
+const easeOut = (u) => 1 - Math.pow(1 - u, 3);
+const easeIn = (u) => u * u * u;
+const easeInOut = (u) => (u < .5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2);
+const easeBack = (u) => { const c = 1.70158 + 1; return 1 + (c + 1) * Math.pow(u - 1, 3) + c * Math.pow(u - 1, 2); };
+/** 0→1→0 の山（フェードイン・アウト用） */
+const bump = (t, a, b, fi, fo) => Math.min(prog(t, a, a + fi), 1 - prog(t, b - fo, b));
+
+const FALLBACK_TL = {
+  total: 30.59, fps: 30,
+  lines: [
+    { id:'l1', scene:'hook',      sub:'欲しい一足は、いつも抽選で終わる。',          start:0.50,  end:3.95 },
+    { id:'l2', scene:'brand',     sub:'SneakDrawなら、1回100ポイントから。',        start:4.29,  end:7.79 },
+    { id:'l3', scene:'lineup',    sub:'トラヴィス、ハイブランド、ポケカ、最新ガジェット。', start:8.01, end:12.35 },
+    { id:'l4', scene:'ui',        sub:'S賞からラストワン賞まで、残り本数はリアルタイム表示。', start:12.57, end:17.34 },
+    { id:'l5', scene:'pointback', sub:'C賞はポイント還元。最後まで狙える。',          start:17.56, end:22.09 },
+    { id:'l6', scene:'tagline',   sub:'欲しいスニーカーに、いちばん近いクジ。',        start:22.39, end:25.67 },
+    { id:'l7', scene:'cta',       sub:'SneakDraw / gachasni.com',                  start:25.93, end:29.89 }
+  ]
+};
+
+let TL = FALLBACK_TL;
+let SC = {};           // シーン境界
+const SUB_LEAD = 0.14; // 字幕を音声より少し早く出す
+const SUB_HOLD = 0.34; // 音声が終わってからの保持
+
+function buildScenes() {
+  const L = {};
+  TL.lines.forEach(l => L[l.id] = l);
+  const cut = (id) => L[id].start - 0.25;
+  SC = {
+    s1: [0,        cut('l2')],
+    s2: [cut('l2'), cut('l3')],
+    s3: [cut('l3'), cut('l4')],
+    s4: [cut('l4'), cut('l5')],
+    s5: [cut('l5'), cut('l6')],
+    s6: [cut('l6'), cut('l7')],
+    s7: [cut('l7'), TL.total]
+  };
+}
+
+/* ---------- 生成しておく装飾要素 ---------- */
+const THUMBS_TOP = ['th_travis','th_lv_dior','th_carnival','th_luxury','th_summer','th_onecoin'];
+const THUMBS_BOT = ['th_pokemon','th_labubu','th_switch2','th_iphone','th_airpods','th_popmart'];
+
+function buildDom() {
+  const mk = (row, names) => {
+    // 途切れないよう3周ぶん並べる
+    for (let r = 0; r < 3; r++) {
+      names.forEach(n => {
+        const d = document.createElement('div');
+        d.className = 'card';
+        d.innerHTML = '<img src="work/assets/' + n + '.png">';
+        row.appendChild(d);
+      });
+    }
+  };
+  mk($('#s3Row1'), THUMBS_TOP);
+  mk($('#s3Row2'), THUMBS_BOT);
+
+  // S2 の火花
+  const sp = $('#s2Sparks');
+  for (let i = 0; i < 34; i++) {
+    const d = document.createElement('div');
+    d.className = 'spark';
+    sp.appendChild(d);
+  }
+  // 光のストリーク
+  const st = $('#streaks');
+  for (let i = 0; i < 4; i++) {
+    const d = document.createElement('div');
+    d.className = 'streak';
+    st.appendChild(d);
+  }
+  // フィルムグレイン（決定論的に position をずらして使う）
+  const c = document.createElement('canvas');
+  c.width = c.height = 180;
+  const g = c.getContext('2d');
+  const img = g.createImageData(180, 180);
+  let seed = 20260818;
+  const rnd = () => (seed = (seed * 1664525 + 1013904223) % 4294967296) / 4294967296;
+  for (let i = 0; i < img.data.length; i += 4) {
+    const v = 120 + rnd() * 135;
+    img.data[i] = img.data[i+1] = img.data[i+2] = v;
+    img.data[i+3] = 26;
+  }
+  g.putImageData(img, 0, 0);
+  $('#grain').style.backgroundImage = 'url(' + c.toDataURL() + ')';
+}
+
+/* ---------- 各シーン ---------- */
+
+// シーンごとのゆっくりしたカメラワーク（寄り／振り）
+const CAM = {
+  s1: [1.00, 1.030,  0,  -10],
+  s2: [1.00, 1.026,  0,    0],
+  s3: [1.02, 1.000,  0,    6],
+  s4: [0.99, 1.028, 12,   -6],
+  s5: [1.00, 1.032, -8,   -4],
+  s6: [1.00, 1.024,  0,    0],
+  s7: [1.00, 1.020,  0,   -6]
+};
+
+function sceneOpacity(t, key) {
+  const [a, b] = SC[key];
+  const el = document.getElementById(key);
+  const XF = 0.28; // クロスフェード
+  const o = clamp(prog(t, a - XF * 0.5, a + XF * 0.5), 0, 1) * (1 - clamp(prog(t, b - XF * 0.5, b + XF * 0.5), 0, 1));
+  el.style.opacity = o.toFixed(4);
+  const u = prog(t, a, b);
+  const [z0, z1, dx, dy] = CAM[key];
+  el.style.transform = 'scale(' + lerp(z0, z1, easeInOut(u)).toFixed(4) + ') translate(' +
+    lerp(0, dx, u).toFixed(2) + 'px,' + lerp(0, dy, u).toFixed(2) + 'px)';
+  return { on: o > 0.001, u: u, local: t - a, len: b - a };
+}
+
+function renderS1(t) {
+  const s = sceneOpacity(t, 's1');
+  if (!s.on) return;
+  const u = s.u;
+  $('#s1Photo').style.transform =
+    'translate(-50%,-50%) scale(' + lerp(1.02, 1.16, easeInOut(u)) + ') rotate(' + lerp(-.6, .4, u) + 'deg)';
+  $('#s1Photo').style.opacity = (0.30 + 0.55 * easeOut(prog(t, 0.15, 1.3))).toFixed(3);
+  $('#s1Ticker').style.transform = 'translateY(-50%) translateX(' + (-140 * u - 60) + 'px)';
+  // 「また、落選。」のスタンプ
+  const sp = prog(t, 1.85, 2.15);
+  const stamp = $('#s1Stamp');
+  stamp.style.transform = 'translate(-50%,-50%) rotate(-7deg) scale(' + lerp(1.7, 1, easeOut(sp)) + ')';
+  const sop = sp * (1 - prog(t, SC.s1[1] - 0.5, SC.s1[1]));
+  stamp.style.color = 'rgba(255,72,84,' + (sop * .95).toFixed(3) + ')';
+  stamp.style.borderColor = 'rgba(255,72,84,' + (sop * .8).toFixed(3) + ')';
+}
+
+function renderS2(t) {
+  const s = sceneOpacity(t, 's2');
+  if (!s.on) return;
+  const lt = s.local;
+  const ring = $('#s2Ring');
+  const ru = prog(lt, 0.02, 0.85);
+  ring.style.transform = 'scale(' + lerp(0.2, 3.4, easeOut(ru)) + ')';
+  ring.style.opacity = (0.9 * (1 - ru)).toFixed(3);
+
+  // コインが左から飛んできてロゴの左に着地
+  const cu = easeOut(prog(lt, 0.05, 0.75));
+  const coin = $('#s2Coin');
+  const cx = lerp(-760, -690, cu), cy = lerp(120, -10, cu);
+  coin.style.transform = 'translate(-50%,-50%) translate(' + cx + 'px,' + cy + 'px) rotate(' + lerp(-220, 0, cu) + 'deg) scale(' + lerp(.4, .85, cu) + ')';
+  coin.style.opacity = cu.toFixed(3);
+  coin.style.left = '50%'; coin.style.top = '50%';
+
+  // ロゴ
+  const lu = easeBack(prog(lt, 0.18, 0.95));
+  $('#s2Logo').style.transform = 'scale(' + lerp(0.72, 1, clamp(lu, 0, 1.2)) + ')';
+  $('#s2Logo').style.opacity = prog(lt, 0.18, 0.6).toFixed(3);
+  $('#s2Sub').style.opacity = prog(lt, 0.72, 1.15).toFixed(3);
+  $('#s2Sub').style.letterSpacing = lerp(0.20, 0.42, easeOut(prog(lt, 0.72, 1.5))).toFixed(3) + 'em';
+
+  // 「1回 100pt から」バッジ
+  const bu = prog(lt, 1.55, 1.95);
+  const badge = $('#s2Badge');
+  const pop = 1 + 0.10 * Math.sin(prog(lt, 1.55, 2.35) * Math.PI * 2) * (1 - prog(lt, 1.55, 2.35));
+  badge.style.transform = 'translate(-50%,-50%) translateY(206px) scale(' + (easeBack(bu) * pop).toFixed(3) + ')';
+  badge.style.opacity = prog(lt, 1.55, 1.75).toFixed(3);
+
+  // 火花
+  const sparks = $('#s2Sparks').children;
+  for (let i = 0; i < sparks.length; i++) {
+    const ang = (i / sparks.length) * Math.PI * 2 + 0.4;
+    const su = prog(lt, 0.05 + (i % 5) * 0.02, 1.5);
+    const r = lerp(60, 620 + (i % 7) * 60, easeOut(su));
+    const e = sparks[i];
+    e.style.left = (960 + Math.cos(ang) * r) + 'px';
+    e.style.top = (540 + Math.sin(ang) * r * 0.72) + 'px';
+    e.style.opacity = (Math.max(0, 1 - su) * 0.9).toFixed(3);
+    e.style.transform = 'scale(' + lerp(1.5, 0.4, su) + ')';
+  }
+}
+
+function renderS3(t) {
+  const s = sceneOpacity(t, 's3');
+  if (!s.on) return;
+  const lt = s.local;
+  const w = (400 + 26) * 6; // 1周ぶんの幅
+  $('#s3Row1').style.transform = 'translateX(' + (-w - (lt * 118) % w) + 'px)';
+  $('#s3Row2').style.transform = 'translateX(' + (-w + (lt * 132) % w) + 'px)';
+  $('#s3RowWrap1').style.transform = 'perspective(1400px) rotateX(6deg) translateY(' + lerp(40, 0, easeOut(prog(lt, 0, .7))) + 'px)';
+  $('#s3RowWrap2').style.transform = 'perspective(1400px) rotateX(-6deg) translateY(' + lerp(-40, 0, easeOut(prog(lt, .1, .8))) + 'px)';
+  $('#s3RowWrap1').style.opacity = prog(lt, 0, .5).toFixed(3);
+  $('#s3RowWrap2').style.opacity = prog(lt, .12, .62).toFixed(3);
+
+  const ti = $('#s3Title');
+  ti.style.opacity = (prog(lt, .15, .55) * (1 - prog(lt, s.len - .5, s.len - .1))).toFixed(3);
+  ti.style.transform = 'translateY(' + lerp(-26, 0, easeOut(prog(lt, .15, .8))) + 'px)';
+
+  const chips = $('#s3Chips').children;
+  for (let i = 0; i < chips.length; i++) {
+    const cu = prog(lt, 1.05 + i * 0.13, 1.35 + i * 0.13);
+    chips[i].style.opacity = cu.toFixed(3);
+    chips[i].style.transform = 'translateY(' + lerp(26, 0, easeBack(cu)) + 'px)';
+  }
+}
+
+function renderS4(t) {
+  const s = sceneOpacity(t, 's4');
+  if (!s.on) return;
+  const lt = s.local;
+
+  const pu = easeOut(prog(lt, 0, .75));
+  const ph = $('#phone');
+  ph.style.opacity = prog(lt, 0, .4).toFixed(3);
+  ph.style.transform = 'perspective(1800px) rotateY(' + lerp(22, 8, pu) + 'deg) translateX(' + lerp(-90, 0, pu) + 'px) scale(' + lerp(.9, 1, pu) + ')';
+
+  // 残り本数が実際に減っていく
+  const drain = prog(lt, 1.35, 3.4);
+  const total = 8289;
+  const remain = Math.round(lerp(total, total - 137, easeInOut(drain)));
+  $('#uiRemain').textContent = remain.toLocaleString('en-US');
+  $('#uiBar').style.width = (remain / total * 100).toFixed(2) + '%';
+
+  // 「1回ガチャる」を押した表現
+  const press = prog(lt, 1.20, 1.34) * (1 - prog(lt, 1.34, 1.52));
+  $('#uiBtn1').style.transform = 'scale(' + (1 - 0.05 * press) + ')';
+  const rip = prog(lt, 1.28, 2.0);
+  const r = $('#uiRipple');
+  r.style.transform = 'translate(-50%,-50%) scale(' + lerp(0, 16, easeOut(rip)) + ')';
+  r.style.top = '32px';
+  r.style.opacity = (0.5 * (1 - rip)).toFixed(3);
+
+  // 賞ランクのはしご
+  $('#ranksTitle').style.opacity = prog(lt, .5, .9).toFixed(3);
+  $('#ranksTitle').style.transform = 'translateX(' + lerp(40, 0, easeOut(prog(lt, .5, 1.1))) + 'px)';
+  const rows = document.querySelectorAll('#ranks .rankRow');
+  rows.forEach((row, i) => {
+    const ru = prog(lt, .95 + i * .34, 1.35 + i * .34);
+    row.style.opacity = ru.toFixed(3);
+    row.style.transform = 'translateX(' + lerp(70, 0, easeBack(ru)) + 'px)';
+  });
+}
+
+function renderS5(t) {
+  const s = sceneOpacity(t, 's5');
+  if (!s.on) return;
+  const lt = s.local;
+
+  const cu = easeOut(prog(lt, .05, .8));
+  const card = $('#s5Card');
+  card.style.opacity = prog(lt, .05, .45).toFixed(3);
+  card.style.transform = 'translate(-50%,-50%) translateY(46px) scale(' + lerp(.82, 1, cu) + ') rotate(' + lerp(-2.5, 0, cu) + 'deg)';
+
+  $('#s5Key').style.opacity = prog(lt, .55, .95).toFixed(3);
+  $('#s5Key').style.transform = 'translateY(' + lerp(-24, 0, easeOut(prog(lt, .55, 1.1))) + 'px)';
+  $('#s5KeyLine').style.width = lerp(0, 470, easeOut(prog(lt, .85, 1.5))) + 'px';
+
+  const lu = prog(lt, 2.35, 2.8);
+  $('#s5Last').style.opacity = lu.toFixed(3);
+  $('#s5Last').style.transform = 'translateX(-50%) translateY(' + lerp(26, 0, easeBack(lu)) + 'px)';
+
+  // コインが2枚まわる
+  [['#s5CoinA', 0], ['#s5CoinB', Math.PI]].forEach(([sel, ph]) => {
+    const a = lt * 1.15 + ph;
+    const e = $(sel);
+    const rr = 470, rry = 210;
+    e.style.transform = 'translate(-50%,-50%) translate(' + (Math.cos(a) * rr) + 'px,' + (Math.sin(a) * rry) + 'px) scale(' + (0.8 + 0.25 * Math.sin(a)) + ')';
+    e.style.opacity = (prog(lt, .3, .9) * (0.5 + 0.5 * Math.sin(a))).toFixed(3);
+  });
+}
+
+function renderS6(t) {
+  const s = sceneOpacity(t, 's6');
+  if (!s.on) return;
+  const lt = s.local;
+  $('#s6Bg').style.transform = 'translate(-50%,-50%) scale(' + lerp(1.12, 1.22, s.u) + ')';
+  $('#s6Bg').style.opacity = (0.42 * prog(lt, 0, .6)).toFixed(3);
+  const tu = easeInOut(prog(lt, .18, 1.5));
+  $('#s6Text').style.opacity = prog(lt, .18, .55).toFixed(3);
+  $('#s6Text').style.transform = 'translateY(-50%) scale(' + lerp(.94, 1, tu) + ')';
+  $('#s6Text').style.filter = 'blur(' + lerp(9, 0, tu).toFixed(2) + 'px)';
+}
+
+function renderS7(t) {
+  const s = sceneOpacity(t, 's7');
+  if (!s.on) return;
+  const lt = s.local;
+  const lu = easeOut(prog(lt, 0, .7));
+  $('#s7Logo').style.transform = 'scale(' + lerp(.86, 1, lu) + ')';
+  $('#s7Logo').style.opacity = prog(lt, 0, .4).toFixed(3);
+  const sh = prog(lt, .55, 1.5);
+  $('#s7Shine').style.transform = 'translateX(' + lerp(-420, 1500, sh) + 'px) skewX(-14deg)';
+  $('#s7Shine').style.opacity = (sh > 0 && sh < 1 ? .9 : 0).toFixed(2);
+  $('#s7Tag').style.opacity = prog(lt, .5, .95).toFixed(3);
+  const uu = prog(lt, .95, 1.35);
+  $('#s7Url').style.opacity = uu.toFixed(3);
+  $('#s7Url').style.transform = 'scale(' + (easeBack(uu) * (1 + .022 * Math.sin(lt * 5.0))).toFixed(4) + ')';
+  $('#s7Url').style.display = 'inline-block';
+  $('#s7Cats').style.opacity = prog(lt, 1.35, 1.75).toFixed(3);
+}
+
+/* ---------- 全体の効果 ---------- */
+function renderGlobal(t, frame) {
+  // 背景グロー：シーンに合わせて色と強さを変える
+  const pulse = 0.86 + 0.14 * Math.sin(t * 1.7);
+  let gs = 1.0, go = .55;
+  if (t < SC.s2[0]) { gs = .8; go = .30; }
+  else if (t >= SC.s6[0] && t < SC.s7[0]) { gs = .9; go = .38; }
+  else if (t >= SC.s7[0]) { gs = 1.25; go = .70; }
+  $('#bgGlow').style.transform = 'translate(-50%,-50%) scale(' + (gs * pulse).toFixed(3) + ')';
+  $('#bgGlow').style.opacity = go.toFixed(3);
+
+  // カット頭の白フラッシュ
+  let fl = 0;
+  ['s2', 's3', 's4', 's5', 's6', 's7'].forEach(k => {
+    const a = SC[k][0];
+    fl = Math.max(fl, bump(t, a - 0.06, a + 0.20, 0.05, 0.16) * (k === 's2' ? .85 : .5));
+  });
+  $('#flash').style.opacity = fl.toFixed(3);
+
+  // 締めの黒フェード
+  $('#fade').style.opacity = prog(t, TL.total - 0.55, TL.total).toFixed(3);
+
+  // グレイン（フレーム番号で決定論的にずらす）
+  $('#grain').style.backgroundPosition = ((frame * 37) % 180) + 'px ' + ((frame * 53) % 180) + 'px';
+
+  // 走る光
+  const st = $('#streaks').children;
+  for (let i = 0; i < st.length; i++) {
+    const period = 3.1 + i * 0.9;
+    const u = ((t + i * 1.3) % period) / period;
+    st[i].style.top = (120 + i * 240) + 'px';
+    st[i].style.transform = 'translateX(' + lerp(-1200, 1200, u) + 'px) rotate(' + (i % 2 ? -2 : 2) + 'deg)';
+    st[i].style.opacity = (Math.sin(u * Math.PI) * .16).toFixed(3);
+  }
+}
+
+function renderSub(t) {
+  let text = '';
+  for (const l of TL.lines) {
+    if (l.id === 'l7') continue; // CTA は画面デザインに任せる
+    if (t >= l.start - SUB_LEAD && t <= l.end + SUB_HOLD) { text = l.sub; break; }
+  }
+  const el = $('#sub');
+  el.textContent = text;
+  if (!text) { el.style.opacity = 0; return; }
+  // 出入りを少しだけ動かす
+  const cur = TL.lines.find(l => t >= l.start - SUB_LEAD && t <= l.end + SUB_HOLD);
+  const a = cur.start - SUB_LEAD, b = cur.end + SUB_HOLD;
+  const o = bump(t, a, b, 0.16, 0.20);
+  el.style.opacity = o.toFixed(3);
+  el.style.transform = 'translateY(' + lerp(16, 0, easeOut(prog(t, a, a + .22))) + 'px)';
+}
+
+window.SEEK = function (t) {
+  const frame = Math.round(t * TL.fps);
+  renderGlobal(t, frame);
+  renderS1(t); renderS2(t); renderS3(t); renderS4(t); renderS5(t); renderS6(t); renderS7(t);
+  renderSub(t);
+};
+
+window.INIT = function (tl) {
+  if (tl) TL = tl;
+  buildScenes();
+  window.SEEK(0);
+  return { total: TL.total, fps: TL.fps, scenes: SC };
+};
+
+buildDom();
+buildScenes();
+window.SEEK(0);
+
+// ブラウザで直接開いたときのプレビュー再生
+if (!window.__CAPTURE__) {
+  const t0 = performance.now();
+  const loop = () => {
+    const t = ((performance.now() - t0) / 1000) % TL.total;
+    window.SEEK(t);
+    requestAnimationFrame(loop);
+  };
+  requestAnimationFrame(loop);
+}
+</script>
+</body>
+</html>
