@@ -1,0 +1,506 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>中村家 Wedding Party 2次会</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=Cormorant+Garamond:ital,wght@0,500;1,500&display=swap">
+<style>
+  :root {
+    --ink: #14203a;
+    --ink-2: #1b2b4d;
+    --ink-3: #26375e;
+    --cream: #f3ede1;
+    --cream-dim: #b9b4a7;
+    --gold: #cfae62;
+    --gold-soft: rgba(207, 174, 98, 0.18);
+    --rose: #e0a2a2;
+    --mint: #8fd3b4;
+    --todo: #ff9e57;
+    --serif: "Shippori Mincho", "Hiragino Mincho ProN", "Yu Mincho", serif;
+    --sans: "Zen Kaku Gothic New", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+    --latin: "Cormorant Garamond", "Shippori Mincho", Georgia, serif;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    background: var(--ink);
+    color: var(--cream);
+    font-family: var(--sans);
+    font-size: clamp(16px, 2.2vmin, 28px);
+    line-height: 1.6;
+    overflow: hidden;
+  }
+
+  /* ---------- deck ---------- */
+  .deck { position: fixed; inset: 0; }
+  .slide {
+    position: absolute; inset: 0;
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    padding-block: 6vmin;
+    padding-inline: clamp(16px, 8vw, 120px);
+    background:
+      radial-gradient(120% 90% at 50% 110%, var(--ink-3) 0%, transparent 60%),
+      var(--ink);
+  }
+  .slide.active { display: flex; }
+  .slide.center { align-items: center; text-align: center; }
+
+  .eyebrow {
+    font-family: var(--latin);
+    font-style: italic;
+    color: var(--gold);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    font-size: 0.85em;
+    margin: 0 0 0.6em;
+  }
+  h1, h2, h3 { font-family: var(--serif); font-weight: 700; margin: 0; text-wrap: balance; line-height: 1.25; }
+  h1 { font-size: clamp(34px, 8vmin, 96px); letter-spacing: 0.04em; }
+  h2 { font-size: clamp(26px, 5.2vmin, 64px); }
+  h3 { font-size: clamp(20px, 3.6vmin, 44px); font-weight: 500; }
+  p { margin: 0; }
+  .lead { font-size: 1.15em; color: var(--cream-dim); max-width: 32em; }
+  .names {
+    font-family: var(--latin);
+    font-size: clamp(40px, 11vmin, 140px);
+    line-height: 1;
+    letter-spacing: 0.02em;
+  }
+  .names .amp { color: var(--gold); font-style: italic; padding-inline: 0.15em; }
+  .rule { width: 6em; height: 1px; background: var(--gold); margin-block: 1.4em; opacity: 0.8; }
+  .center .rule { margin-inline: auto; }
+
+  /* ---------- program / list ---------- */
+  .program { list-style: none; padding: 0; margin: 1.5em 0 0; display: grid; gap: 0.7em; max-width: 26em; }
+  .program li {
+    display: grid; grid-template-columns: 2.6em 1fr; align-items: baseline; gap: 0.8em;
+    font-family: var(--serif); font-size: 1.5em; padding-block: 0.25em;
+    border-bottom: 1px solid rgba(243, 237, 225, 0.12);
+  }
+  .program .num { font-family: var(--latin); font-style: italic; color: var(--gold); font-size: 1.15em; }
+  .program small { display: block; font-family: var(--sans); font-size: 0.55em; color: var(--cream-dim); }
+
+  .points { list-style: none; padding: 0; margin: 1.2em 0 0; display: grid; gap: 0.55em; max-width: 34em; font-size: 1.15em; }
+  .points li { padding-left: 1.3em; position: relative; }
+  .points li::before { content: ""; position: absolute; left: 0; top: 0.72em; width: 0.55em; height: 1px; background: var(--gold); }
+
+  /* ---------- quiz ---------- */
+  .q-head { display: flex; align-items: baseline; gap: 1em; margin-bottom: 0.6em; }
+  .q-no { font-family: var(--latin); font-style: italic; color: var(--gold); font-size: clamp(28px, 6vmin, 72px); line-height: 1; }
+  .q-no small { font-size: 0.5em; letter-spacing: 0.1em; }
+  .choices { list-style: none; padding: 0; margin: 1.4em 0 0; display: grid; grid-template-columns: 1fr 1fr; gap: 0.9em; max-width: 60em; }
+  .choice {
+    display: grid; grid-template-columns: 1.7em 1fr; align-items: center; gap: 0.7em;
+    padding: 0.75em 1.1em; font-size: 1.35em;
+    border: 1px solid rgba(243, 237, 225, 0.18); border-radius: 6px;
+    transition: opacity 0.35s, background 0.35s, border-color 0.35s;
+  }
+  .choice .mark {
+    font-family: var(--latin); font-size: 1.2em; color: var(--gold); text-align: center;
+    border-right: 1px solid rgba(243, 237, 225, 0.15); padding-right: 0.4em;
+  }
+  .choice .note { display: none; font-size: 0.75em; color: var(--gold); }
+  .revealed .choice { opacity: 0.35; }
+  .revealed .choice[data-correct] { opacity: 1; background: var(--gold-soft); border-color: var(--gold); }
+  .revealed .choice[data-correct] .note { display: inline; }
+  .answer-banner {
+    display: none; margin-top: 1.2em; font-family: var(--serif); font-size: 1.4em; color: var(--gold);
+  }
+  .revealed .answer-banner { display: block; }
+  .free-answer {
+    margin-top: 1.2em; font-family: var(--serif); font-size: clamp(30px, 7vmin, 90px); color: var(--gold); line-height: 1;
+    visibility: hidden;
+  }
+  .revealed .free-answer { visibility: visible; }
+  .photo-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1em; margin-top: 1.2em; max-width: 60em; }
+  .photo {
+    aspect-ratio: 3 / 4; max-width: 100%;
+    display: grid; place-items: center; text-align: center;
+    border: 1px dashed rgba(243, 237, 225, 0.35); border-radius: 6px; color: var(--cream-dim); font-size: 0.9em;
+    transition: opacity 0.35s, border-color 0.35s;
+  }
+  .photo .mark { font-family: var(--latin); font-size: 2em; color: var(--gold); line-height: 1; }
+  .revealed .photo { opacity: 0.3; }
+  .revealed .photo[data-correct] { opacity: 1; border: 2px solid var(--gold); background: var(--gold-soft); }
+
+  /* ---------- bingo ---------- */
+  .bingo { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); gap: 3vw; align-items: center; }
+  .bingo-now {
+    font-family: var(--latin); font-size: clamp(90px, 26vmin, 320px); line-height: 1; text-align: center;
+    color: var(--gold); font-variant-numeric: tabular-nums;
+  }
+  .bingo-ctl { display: flex; gap: 0.6em; justify-content: center; flex-wrap: wrap; margin-top: 0.6em; }
+  button {
+    font: inherit; font-family: var(--sans); font-weight: 500; cursor: pointer;
+    color: var(--ink); background: var(--gold); border: 0; border-radius: 999px; padding: 0.5em 1.4em;
+  }
+  button.ghost { background: transparent; color: var(--cream-dim); border: 1px solid rgba(243, 237, 225, 0.3); }
+  button:focus-visible { outline: 2px solid var(--cream); outline-offset: 3px; }
+  .board { display: grid; grid-template-columns: repeat(15, 1fr); gap: 0.3em; font-variant-numeric: tabular-nums; }
+  .board span {
+    display: grid; place-items: center; aspect-ratio: 1; font-size: 0.8em; border-radius: 4px;
+    background: rgba(243, 237, 225, 0.06); color: var(--cream-dim);
+  }
+  .board span.hit { background: var(--gold); color: var(--ink); font-weight: 700; }
+  .board span.last { outline: 2px solid var(--cream); }
+  .prizes { list-style: none; padding: 0; margin: 1.2em 0 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 1em; max-width: 50em; }
+  .prizes li { padding: 0.9em 1em; border: 1px solid rgba(243, 237, 225, 0.18); border-radius: 6px; }
+  .prizes .rank { font-family: var(--latin); font-style: italic; color: var(--gold); font-size: 1.3em; display: block; }
+
+  /* ---------- skeleton markers ---------- */
+  .todo {
+    display: inline-block; vertical-align: middle; margin-left: 0.6em;
+    font-family: var(--sans); font-size: 0.5em; font-weight: 700; letter-spacing: 0.1em;
+    color: var(--ink); background: var(--todo); border-radius: 3px; padding: 0.1em 0.5em;
+  }
+  .placeholder {
+    margin-top: 1.2em; padding: 1.2em 1.4em; max-width: 40em;
+    border: 1px dashed var(--todo); border-radius: 6px; color: var(--cream-dim); font-size: 0.95em;
+  }
+  .placeholder strong { color: var(--todo); font-weight: 700; }
+
+  /* ---------- chrome ---------- */
+  .hud {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 2;
+    display: flex; justify-content: space-between; align-items: center; gap: 1em;
+    padding: 0.6em clamp(16px, 3vw, 40px); font-size: 0.7em; color: var(--cream-dim); font-family: var(--latin);
+    letter-spacing: 0.08em;
+  }
+  .hud .part { font-style: italic; }
+  .hud .counter { font-variant-numeric: tabular-nums; }
+  .progress { position: fixed; left: 0; bottom: 0; height: 2px; background: var(--gold); z-index: 3; transition: width 0.3s; }
+  .help {
+    position: fixed; top: 0.8em; right: 1em; z-index: 2; font-size: 0.7em; color: var(--cream-dim);
+    opacity: 0.7; font-family: var(--sans);
+  }
+  kbd { font-family: var(--latin); border: 1px solid rgba(243, 237, 225, 0.3); border-radius: 3px; padding: 0 0.4em; }
+
+  @media (max-width: 720px) {
+    .choices, .prizes { grid-template-columns: 1fr; }
+    .photo-grid { grid-template-columns: repeat(2, 1fr); }
+    .bingo { grid-template-columns: 1fr; }
+    .help { display: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="help">進む <kbd>→</kbd> <kbd>Space</kbd> ／ 戻る <kbd>←</kbd> ／ 正解表示は「進む」で</div>
+
+<div class="deck" id="deck">
+
+  <!-- ============ OPENING ============ -->
+  <section class="slide center" data-part="Opening">
+    <p class="eyebrow">Wedding Party — 2次会</p>
+    <p class="names">新郎<span class="amp">&amp;</span>新婦</p>
+    <div class="rule"></div>
+    <h3>ご結婚おめでとうございます <span class="todo">名前・日付を入れる</span></h3>
+  </section>
+
+  <section class="slide" data-part="Opening">
+    <p class="eyebrow">Program</p>
+    <h2>本日の流れ</h2>
+    <ol class="program">
+      <li><span class="num">1</span><span>クイズ大会<small>新郎新婦にまつわる全7問</small></span></li>
+      <li><span class="num">2</span><span>中村になろうよ<small>ルールは当日まで秘密 <span class="todo">内容確定</span></small></span></li>
+      <li><span class="num">3</span><span>ビンゴ大会<small>豪華景品あり</small></span></li>
+    </ol>
+  </section>
+
+  <!-- ============ PART 1: QUIZ ============ -->
+  <section class="slide center" data-part="Part 1 — Quiz">
+    <p class="eyebrow">Part 1</p>
+    <h1>クイズ大会</h1>
+    <div class="rule"></div>
+    <p class="lead">ふたりのこと、どれだけ知ってる？</p>
+  </section>
+
+  <section class="slide" data-part="Part 1 — Quiz">
+    <p class="eyebrow">Rules</p>
+    <h2>ルール説明</h2>
+    <ul class="points">
+      <li>全7問。4択問題は A〜D から1つ選んで手を挙げてください</li>
+      <li>正解数がいちばん多い人が優勝</li>
+      <li>同点の場合は新郎とじゃんけん <span class="todo">決め方を確定</span></li>
+      <li>優勝者には景品をプレゼント <span class="todo">景品を決める</span></li>
+    </ul>
+  </section>
+
+  <section class="slide" data-part="Part 1 — Quiz" data-reveal>
+    <div class="q-head"><span class="q-no"><small>Q.</small>1</span></div>
+    <h2>初めてのデートで新郎がやらかした失敗は？</h2>
+    <ul class="choices">
+      <li class="choice" data-correct><span class="mark">A</span><span>待ち合わせに遅刻 <span class="note">…しかも1時間</span></span></li>
+      <li class="choice"><span class="mark">B</span><span>服に値札がついていた</span></li>
+      <li class="choice"><span class="mark">C</span><span>飲み物を新婦の服にこぼした</span></li>
+      <li class="choice"><span class="mark">D</span><span>店を別日で予約していた</span></li>
+    </ul>
+    <p class="answer-banner">正解は A ── 待ち合わせに1時間の遅刻</p>
+  </section>
+
+  <section class="slide" data-part="Part 1 — Quiz" data-reveal>
+    <div class="q-head"><span class="q-no"><small>Q.</small>2</span></div>
+    <h2>新婦が新郎に「これだけはやめてほしい」と思っている癖は？</h2>
+    <ul class="choices">
+      <li class="choice" data-correct><span class="mark">A</span><span>酔って帰ってきてダル絡み</span></li>
+      <li class="choice"><span class="mark">B</span><span>いびきがうるさい</span></li>
+      <li class="choice"><span class="mark">C</span><span>服脱ぎっぱなし</span></li>
+      <li class="choice"><span class="mark">D</span><span>身支度に時間がかかる</span></li>
+    </ul>
+    <p class="answer-banner">正解は A ── 酔って帰ってきてダル絡み</p>
+  </section>
+
+  <section class="slide" data-part="Part 1 — Quiz" data-reveal>
+    <div class="q-head"><span class="q-no"><small>Q.</small>3</span></div>
+    <h2>喧嘩したとき新郎が必ずすることは？</h2>
+    <ul class="choices">
+      <li class="choice" data-correct><span class="mark">A</span><span>コンビニでアイスを買ってくる</span></li>
+      <li class="choice"><span class="mark">B</span><span>許してもらえるまで土下座する</span></li>
+      <li class="choice"><span class="mark">C</span><span>義母に助けを求める</span></li>
+      <li class="choice"><span class="mark">D</span><span>拗ねる</span></li>
+    </ul>
+    <p class="answer-banner">正解は A ── コンビニでアイスを買ってくる</p>
+  </section>
+
+  <section class="slide" data-part="Part 1 — Quiz" data-reveal>
+    <div class="q-head"><span class="q-no"><small>Q.</small>4</span></div>
+    <h2>新婦が思う「新郎の手料理で一番美味しいもの」はどれ？</h2>
+    <ul class="choices">
+      <li class="choice" data-correct><span class="mark">A</span><span>参鶏湯</span></li>
+      <li class="choice"><span class="mark">B</span><span>ガパオライス</span></li>
+      <li class="choice"><span class="mark">C</span><span>生姜焼き</span></li>
+      <li class="choice"><span class="mark">D</span><span>トマトカレー</span></li>
+    </ul>
+    <p class="answer-banner">正解は A ── 参鶏湯</p>
+  </section>
+
+  <section class="slide" data-part="Part 1 — Quiz" data-reveal>
+    <div class="q-head"><span class="q-no"><small>Q.</small>5</span></div>
+    <h2>スクリーンに映っている幼少期の写真、新郎はどれ？ <span class="todo">写真待ち</span></h2>
+    <div class="photo-grid">
+      <div class="photo" data-correct><span><span class="mark">A</span><br>写真を差し替え</span></div>
+      <div class="photo"><span><span class="mark">B</span><br>写真を差し替え</span></div>
+      <div class="photo"><span><span class="mark">C</span><br>写真を差し替え</span></div>
+      <div class="photo"><span><span class="mark">D</span><br>写真を差し替え</span></div>
+    </div>
+    <p class="answer-banner">正解は ？ ── 写真が届いたら正解位置を設定</p>
+  </section>
+
+  <section class="slide" data-part="Part 1 — Quiz" data-reveal>
+    <div class="q-head"><span class="q-no"><small>Q.</small>6</span></div>
+    <h2>新郎は腕立て伏せを何回できる？</h2>
+    <p class="lead">数字を予想して、いちばん近い人が正解。ニアピン賞方式</p>
+    <p class="free-answer">？？回 <span class="todo">回数を確認（当日その場で実演も可）</span></p>
+  </section>
+
+  <section class="slide" data-part="Part 1 — Quiz" data-reveal>
+    <div class="q-head"><span class="q-no"><small>Q.</small>7</span></div>
+    <h2>新郎新婦が入籍前にやらかしたエピソードは？</h2>
+    <ul class="choices">
+      <li class="choice" data-correct><span class="mark">A</span><span>新郎が社員旅行で左手薬指を負傷</span></li>
+      <li class="choice"><span class="mark">B</span><span>新婦が婚約指輪を落として無くしてしまう</span></li>
+      <li class="choice"><span class="mark">C</span><span>新郎が入籍日前日に終電を逃す</span></li>
+      <li class="choice"><span class="mark">D</span><span>新婦が義両親との顔合わせの日に道に迷って遅刻</span></li>
+    </ul>
+    <p class="answer-banner">正解は A ── 社員旅行で左手薬指を負傷</p>
+  </section>
+
+  <section class="slide center" data-part="Part 1 — Quiz">
+    <p class="eyebrow">Result</p>
+    <h1>結果発表</h1>
+    <div class="rule"></div>
+    <p class="lead">全問正解、または最多正解の方は前へどうぞ</p>
+    <div class="placeholder"><strong>TODO</strong> 優勝者の決め方・景品を記載。「るい or るいぴー」の質問を入れる場合はここまでのどこかに追加</div>
+  </section>
+
+  <!-- ============ PART 2: 中村になろうよ ============ -->
+  <section class="slide center" data-part="Part 2 — 中村になろうよ">
+    <p class="eyebrow">Part 2</p>
+    <h1>中村になろうよ</h1>
+    <div class="rule"></div>
+    <p class="lead">今日だけ、みんな中村家</p>
+  </section>
+
+  <section class="slide" data-part="Part 2 — 中村になろうよ">
+    <p class="eyebrow">Rules</p>
+    <h2>ルール説明 <span class="todo">ゲーム内容の確定待ち</span></h2>
+    <div class="placeholder">
+      <strong>TODO</strong> 向井さんと決める項目：
+      <ul class="points">
+        <li>参加人数・参加者の選び方（全員？代表者？）</li>
+        <li>何をしたら「中村になれる」のか（お題／勝敗条件）</li>
+        <li>ラウンド数と1ラウンドの時間</li>
+        <li>必要な小道具・BGM</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="slide" data-part="Part 2 — 中村になろうよ">
+    <p class="eyebrow">Round 1</p>
+    <h2>お題 <span class="todo">内容を入れる</span></h2>
+    <div class="placeholder"><strong>TODO</strong> ラウンドごとにこのスライドを複製。お題・制限時間・判定方法を記載</div>
+  </section>
+
+  <section class="slide center" data-part="Part 2 — 中村になろうよ">
+    <p class="eyebrow">Result</p>
+    <h1>中村家、新メンバー発表</h1>
+    <div class="rule"></div>
+    <div class="placeholder"><strong>TODO</strong> 勝者の発表演出・景品</div>
+  </section>
+
+  <!-- ============ PART 3: BINGO ============ -->
+  <section class="slide center" data-part="Part 3 — Bingo">
+    <p class="eyebrow">Part 3</p>
+    <h1>ビンゴ大会</h1>
+    <div class="rule"></div>
+    <p class="lead">カードのご用意はよろしいですか</p>
+  </section>
+
+  <section class="slide" data-part="Part 3 — Bingo">
+    <p class="eyebrow">Rules</p>
+    <h2>ルール説明</h2>
+    <ul class="points">
+      <li>番号が出たらカードの数字に穴をあけてください</li>
+      <li>リーチになったら「リーチ！」と大きな声で</li>
+      <li>ビンゴになったら前へ。早い順に景品をお選びいただけます <span class="todo">選択制か順位制か決める</span></li>
+    </ul>
+  </section>
+
+  <section class="slide" data-part="Part 3 — Bingo">
+    <p class="eyebrow">Prizes</p>
+    <h2>景品 <span class="todo">リストを埋める</span></h2>
+    <ul class="prizes">
+      <li><span class="rank">1st</span>景品名を入れる</li>
+      <li><span class="rank">2nd</span>景品名を入れる</li>
+      <li><span class="rank">3rd</span>景品名を入れる</li>
+      <li><span class="rank">4th</span>景品名を入れる</li>
+      <li><span class="rank">5th</span>景品名を入れる</li>
+      <li><span class="rank">…</span>参加賞など</li>
+    </ul>
+  </section>
+
+  <section class="slide" data-part="Part 3 — Bingo">
+    <div class="bingo">
+      <div>
+        <p class="eyebrow" style="text-align:center">Number</p>
+        <p class="bingo-now" id="bingo-now">—</p>
+        <div class="bingo-ctl">
+          <button type="button" id="bingo-draw">抽選する</button>
+          <button type="button" class="ghost" id="bingo-reset">リセット</button>
+        </div>
+      </div>
+      <div class="board" id="bingo-board" aria-label="出た番号の一覧"></div>
+    </div>
+  </section>
+
+  <!-- ============ ENDING ============ -->
+  <section class="slide center" data-part="Ending">
+    <p class="eyebrow">Closing</p>
+    <h1>新郎新婦よりご挨拶</h1>
+    <div class="rule"></div>
+    <div class="placeholder"><strong>TODO</strong> 挨拶の順番（新郎→新婦、または連名）と、写真撮影の案内</div>
+  </section>
+
+  <section class="slide center" data-part="Ending">
+    <p class="eyebrow">Thank you</p>
+    <p class="names">新郎<span class="amp">&amp;</span>新婦</p>
+    <div class="rule"></div>
+    <h3>本日はありがとうございました</h3>
+  </section>
+
+</div>
+
+<div class="hud">
+  <span class="part" id="hud-part"></span>
+  <span class="counter" id="hud-counter"></span>
+</div>
+<div class="progress" id="progress"></div>
+
+<script>
+(function () {
+  var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
+  var idx = 0;
+  var hudPart = document.getElementById('hud-part');
+  var hudCounter = document.getElementById('hud-counter');
+  var progress = document.getElementById('progress');
+
+  function show(i) {
+    idx = Math.max(0, Math.min(slides.length - 1, i));
+    slides.forEach(function (s, k) { s.classList.toggle('active', k === idx); });
+    hudPart.textContent = slides[idx].getAttribute('data-part') || '';
+    hudCounter.textContent = (idx + 1) + ' / ' + slides.length;
+    progress.style.width = ((idx + 1) / slides.length * 100) + '%';
+    try { history.replaceState(null, '', '#' + (idx + 1)); } catch (e) {}
+  }
+  function next() {
+    var s = slides[idx];
+    if (s.hasAttribute('data-reveal') && !s.classList.contains('revealed')) {
+      s.classList.add('revealed');
+      return;
+    }
+    show(idx + 1);
+  }
+  function prev() {
+    var s = slides[idx];
+    if (s.classList.contains('revealed')) { s.classList.remove('revealed'); return; }
+    show(idx - 1);
+  }
+
+  document.addEventListener('keydown', function (e) {
+    if (e.target.tagName === 'BUTTON') return;
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter' || e.key === 'PageDown') { e.preventDefault(); next(); }
+    else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); prev(); }
+    else if (e.key === 'Home') { show(0); }
+    else if (e.key === 'End') { show(slides.length - 1); }
+  });
+  document.getElementById('deck').addEventListener('click', function (e) {
+    if (e.target.closest('button')) return;
+    var r = window.innerWidth;
+    if (e.clientX < r * 0.2) prev(); else next();
+  });
+
+  var start = parseInt((location.hash || '#1').slice(1), 10);
+  show(isNaN(start) ? 0 : start - 1);
+
+  /* ---------- bingo ---------- */
+  var board = document.getElementById('bingo-board');
+  var now = document.getElementById('bingo-now');
+  var cells = [];
+  var drawn = [];
+  for (var n = 1; n <= 75; n++) {
+    var c = document.createElement('span');
+    c.textContent = n;
+    board.appendChild(c);
+    cells.push(c);
+  }
+  function draw() {
+    var rest = [];
+    for (var n = 1; n <= 75; n++) if (drawn.indexOf(n) < 0) rest.push(n);
+    if (!rest.length) return;
+    var pick = rest[Math.floor(Math.random() * rest.length)];
+    drawn.push(pick);
+    now.textContent = pick;
+    cells.forEach(function (c) { c.classList.remove('last'); });
+    cells[pick - 1].classList.add('hit');
+    cells[pick - 1].classList.add('last');
+  }
+  document.getElementById('bingo-draw').addEventListener('click', draw);
+  document.getElementById('bingo-reset').addEventListener('click', function () {
+    if (!confirm('出た番号をすべてリセットしますか？')) return;
+    drawn = [];
+    now.textContent = '—';
+    cells.forEach(function (c) { c.classList.remove('hit'); c.classList.remove('last'); });
+  });
+})();
+</script>
+</body>
+</html>
