@@ -1,0 +1,16 @@
+{
+  "name": "ikinari-pdf-complete-video",
+  "version": "1.0.0",
+  "private": true,
+  "description": "いきなりPDF Ver.13 COMPLETE — Amazon 商品動画のレンダリング",
+  "scripts": {
+    "render": "node tools/render.js --preset 16x9",
+    "render:square": "node tools/render.js --preset 1x1",
+    "render:all": "node tools/render.js --preset 16x9 && node tools/render.js --preset 1x1",
+    "preview": "node -e \"console.log('src/video.html をブラウザで開いてください')\""
+  },
+  "dependencies": {
+    "@ffmpeg-installer/ffmpeg": "^1.1.0",
+    "playwright": "^1.40.0"
+  }
+}

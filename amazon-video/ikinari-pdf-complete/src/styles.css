@@ -1,0 +1,400 @@
+/* ============================================================
+   いきなりPDF Ver.13 COMPLETE — Amazon 商品動画
+   デザインシステム / レイアウト
+   単位は rem 固定 (1rem = キャンバス幅の 1%) なので
+   16:9 / 1:1 の両方で同じ比率のレイアウトになる。
+   ============================================================ */
+
+:root{
+  --navy:    #061024;
+  --navy2:   #0B1C36;
+  --navy3:   #12294B;
+  --blue:    #0086CC;
+  --blue-d:  #0460B5;
+  --blue-l:  #38B6F0;
+  --cyan:    #5FD2FF;
+  --gold:    #F5B21A;
+  --gold-l:  #FFD873;
+  --red:     #E23C2E;
+  --green:   #24A05C;
+  --orange:  #F49807;
+  --purple:  #A96FA8;
+  --ink:     #0B1220;
+  --paper:   #F4F7FB;
+  --mute:    #8FA5C0;
+}
+
+*{ margin:0; padding:0; box-sizing:border-box; }
+
+html,body{
+  width:100%; height:100%;
+  background:#000; overflow:hidden;
+  font-family:'Noto Sans JP', sans-serif;
+  font-feature-settings:'palt' 1;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:geometricPrecision;
+}
+
+#stage{
+  position:relative;
+  width:100%; height:100%;
+  overflow:hidden;
+  background:var(--navy);
+  isolation:isolate;
+}
+
+/* ---------- シーン共通 ---------- */
+.scene{
+  position:absolute; inset:0;
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  opacity:0; will-change:opacity, transform;
+  padding:5rem 7rem 7.5rem;
+}
+.scene.sq{ padding:6rem 6rem 10rem; }
+
+/* シーン直下のコンテンツは必ず背景より前面に置く。
+   .bg は position:absolute なので、z-index を指定しないと
+   「位置指定なしのフロー内要素」より後に描画され、
+   transform を持たないテキストが背景に隠れてしまう。 */
+.scene > *:not(.bg):not(.grid-lines):not(.stripe){
+  position:relative; z-index:2;
+}
+
+/* 背景レイヤ */
+.bg{ position:absolute; inset:0; z-index:0; }
+.bg-grad-navy{
+  background:
+    radial-gradient(120% 90% at 18% 8%,  #17406F 0%, transparent 60%),
+    radial-gradient(110% 80% at 88% 92%, #0A2B55 0%, transparent 62%),
+    linear-gradient(165deg, #081729 0%, #050B16 100%);
+}
+.bg-grad-blue{
+  background:
+    radial-gradient(120% 100% at 80% 10%, #2AA6E8 0%, transparent 58%),
+    linear-gradient(150deg, #0A63B8 0%, #05306B 100%);
+}
+.bg-paper{ background:linear-gradient(170deg,#FFFFFF 0%, #E9F1FA 100%); }
+
+/* 斜めのブランドストライプ */
+.stripe{
+  position:absolute; z-index:1;
+  height:1.1rem; border-radius:1rem;
+  background:linear-gradient(90deg, var(--blue-l), var(--blue));
+  opacity:.55;
+}
+
+/* グリッドのうっすらした線 */
+.grid-lines{
+  position:absolute; inset:0; z-index:0; opacity:.14;
+  background-image:
+    linear-gradient(to right, rgba(120,190,255,.35) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(120,190,255,.35) 1px, transparent 1px);
+  background-size:6rem 6rem;
+}
+
+/* ---------- タイポグラフィ ---------- */
+.eyebrow{
+  font-size:2.05rem; font-weight:700; letter-spacing:.24em;
+  color:var(--cyan); margin-bottom:1.9rem;
+  display:flex; align-items:center; gap:1.2rem;
+}
+.eyebrow::before{
+  content:''; width:3.2rem; height:.34rem; border-radius:.34rem;
+  background:var(--cyan); display:inline-block;
+}
+.eyebrow.on-light{ color:var(--blue-d); }
+.eyebrow.on-light::before{ background:var(--blue-d); }
+
+h1.headline{
+  font-size:7.4rem; font-weight:900; line-height:1.16;
+  letter-spacing:.005em; color:#fff; text-align:center;
+}
+h2.headline{
+  font-size:5.2rem; font-weight:900; line-height:1.2;
+  color:#fff; text-align:center; letter-spacing:.01em;
+}
+h2.headline.on-light{ color:var(--ink); }
+.headline .hl{ color:var(--gold-l); }
+.headline .hl-b{ color:var(--cyan); }
+.sub{
+  font-size:2.35rem; font-weight:500; line-height:1.6;
+  color:#C9DCF2; text-align:center; margin-top:1.8rem;
+}
+.headline.left, .sub.left, .eyebrow.left{ text-align:left; }
+.sub.on-light{ color:#3A536F; }
+
+/* 1文字ずつ出す用 */
+.ch{ display:inline-block; will-change:transform,opacity; }
+
+/* ---------- S1: 悩みチップ ---------- */
+.chips{
+  display:flex; flex-wrap:wrap; justify-content:center;
+  gap:1.7rem 1.7rem; margin-top:3.6rem; max-width:82rem;
+}
+.chip{
+  display:flex; align-items:center; gap:1.1rem;
+  padding:1.5rem 2.6rem; border-radius:99rem;
+  background:rgba(255,255,255,.07);
+  border:.16rem solid rgba(140,200,255,.30);
+  font-size:2.5rem; font-weight:700; color:#E8F2FF;
+  white-space:nowrap; backdrop-filter:blur(2px);
+  will-change:transform,opacity;
+}
+.chip .x{
+  width:2.9rem; height:2.9rem; border-radius:50%;
+  background:var(--red); color:#fff; flex:0 0 auto;
+  display:flex; align-items:center; justify-content:center;
+  font-size:1.9rem; font-weight:900; line-height:1;
+}
+
+/* ---------- S2: 製品リビール ---------- */
+.reveal{
+  display:flex; align-items:center; justify-content:center;
+  gap:6.5rem; width:100%;
+}
+.reveal.sq{ flex-direction:column; gap:3.4rem; }
+.pkg-wrap{ position:relative; flex:0 0 auto; will-change:transform,opacity; }
+.pkg{
+  width:31rem; height:31rem; border-radius:1.6rem;
+  box-shadow:0 3rem 6rem rgba(0,0,0,.55), 0 0 0 .3rem rgba(255,255,255,.12);
+  display:block; object-fit:cover;
+}
+.reveal-txt{ display:flex; flex-direction:column; align-items:flex-start; }
+.reveal.sq .reveal-txt{ align-items:center; }
+.brandline{
+  font-size:2.3rem; font-weight:700; letter-spacing:.2em; color:var(--cyan);
+  margin-bottom:1.2rem;
+}
+.prodname{
+  font-size:7.4rem; font-weight:900; line-height:1.02; color:#fff;
+  letter-spacing:-.01em;
+}
+.prodname .ver{ font-size:4.4rem; font-weight:700; vertical-align:.5rem; margin-left:1rem; color:var(--cyan); }
+.edition{
+  margin-top:1.2rem; padding:.8rem 2.4rem; border-radius:.7rem;
+  background:linear-gradient(90deg,#000 0%, #12294B 100%);
+  border:.18rem solid rgba(140,200,255,.45);
+  font-size:3.7rem; font-weight:900; letter-spacing:.34em; color:#fff;
+}
+.tagchips{ display:flex; flex-wrap:wrap; gap:.85rem; margin-top:2rem; max-width:54rem; }
+.reveal.sq .tagchips{ justify-content:center; }
+.tag{
+  padding:.85rem 1.6rem; border-radius:.55rem;
+  font-size:1.95rem; font-weight:700; color:#fff; white-space:nowrap;
+}
+
+/* 第1位バッジ */
+.badge1{
+  position:absolute; left:-4.6rem; bottom:-4rem;
+  width:16.5rem; height:16.5rem; border-radius:50%;
+  background:radial-gradient(circle at 34% 28%, #FFE9A8 0%, var(--gold) 46%, #C98708 100%);
+  box-shadow:0 1.6rem 3.4rem rgba(0,0,0,.5), inset 0 0 0 .5rem rgba(255,255,255,.32);
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  color:#4A2E02; text-align:center; will-change:transform,opacity;
+}
+.badge1 .b-s{ font-size:1.52rem; font-weight:700; line-height:1.28; }
+.badge1 .b-m{ font-size:2.2rem; font-weight:900; line-height:1.2; margin-top:.2rem; }
+.badge1 .b-l{ font-size:4.3rem; font-weight:900; line-height:1; margin-top:.25rem; }
+
+/* ---------- S3: 機能グリッド ---------- */
+.fgrid{
+  display:grid; grid-template-columns:repeat(4,1fr); gap:2rem;
+  width:100%; max-width:106rem; margin-top:2.8rem;
+}
+.fgrid.sq{ grid-template-columns:repeat(2,1fr); gap:2.4rem; max-width:82rem; }
+.fcard{
+  background:rgba(255,255,255,.055);
+  border:.16rem solid rgba(140,200,255,.24);
+  border-radius:1.5rem; overflow:hidden;
+  display:flex; flex-direction:column;
+  will-change:transform,opacity;
+}
+.fcard .shot{
+  width:100%; height:11.2rem; object-fit:cover; object-position:center top;
+  background:#fff; border-bottom:.16rem solid rgba(140,200,255,.24);
+}
+.fgrid.sq .fcard .shot{ height:15rem; }
+.convertviz{
+  display:flex; align-items:center; justify-content:center; gap:1.4rem;
+  background:linear-gradient(160deg,#EDF8F1,#DCEFE4);
+}
+.cv-doc{
+  width:4.8rem; height:6rem; border-radius:.45rem; background:#fff;
+  border:.18rem solid #BFD4C7; box-shadow:0 .3rem .8rem rgba(0,0,0,.12);
+  display:flex; align-items:center; justify-content:center;
+  font-size:1.35rem; font-weight:900; color:#D2352B; letter-spacing:.02em;
+}
+.cv-arrow{ color:#24A05C; font-size:2.4rem; font-weight:900; line-height:1; }
+.cv-out{ display:flex; flex-direction:column; gap:.5rem; }
+.cv-chip{
+  font-size:1.22rem; font-weight:800; color:#fff;
+  padding:.34rem .85rem; border-radius:.32rem; text-align:center; letter-spacing:.02em;
+}
+
+.fcard .fbody{ padding:1.5rem 1.7rem 1.8rem; }
+.fcard .fno{
+  display:inline-flex; align-items:center; justify-content:center;
+  width:3rem; height:3rem; border-radius:.6rem;
+  font-size:1.75rem; font-weight:900; color:#fff; margin-bottom:.9rem;
+}
+.fcard h3{ font-size:2.38rem; font-weight:900; color:#fff; line-height:1.24; }
+.fcard p{ font-size:1.68rem; font-weight:500; color:#A9C4E2; line-height:1.48; margin-top:.6rem; }
+
+/* ---------- 左右2カラム（S4） ---------- */
+.splitwrap{
+  display:flex; align-items:center; justify-content:center;
+  gap:4.5rem; width:100%; max-width:110rem;
+}
+.splitwrap.sq{ flex-direction:column; gap:2.6rem; max-width:82rem; }
+.splitL{ flex:0 0 41%; display:flex; flex-direction:column; align-items:flex-start; }
+.splitwrap.sq .splitL{ flex:0 0 auto; align-items:center; }
+.splitwrap.sq .splitL .headline,
+.splitwrap.sq .splitL .sub{ text-align:center; }
+.splitR{ flex:1 1 auto; min-width:0; display:flex; justify-content:center; }
+
+/* ---------- S4/S5: スクリーンショット + 吹き出し ---------- */
+.shotstage{
+  position:relative; width:100%;
+  display:flex; justify-content:center;
+}
+.shotframe{
+  position:relative; border-radius:1.3rem; overflow:hidden;
+  box-shadow:0 2.6rem 5.4rem rgba(0,0,0,.55);
+  border:.2rem solid rgba(255,255,255,.18);
+  background:#fff; will-change:transform,opacity;
+}
+.shotframe{ width:100%; }
+.shotframe img{ display:block; width:100%; height:auto; }
+.spot{
+  position:absolute; border:.42rem solid var(--gold);
+  border-radius:1rem; box-shadow:0 0 0 .55rem rgba(245,178,26,.26), 0 0 3.4rem rgba(245,178,26,.5);
+  will-change:transform,opacity;
+}
+.callout{
+  position:absolute; padding:.95rem 1.7rem; border-radius:.8rem;
+  background:var(--gold); color:#3B2400;
+  font-size:1.85rem; font-weight:900; white-space:nowrap;
+  box-shadow:0 1rem 2.4rem rgba(0,0,0,.45);
+  will-change:transform,opacity;
+}
+
+/* COMPLETE 限定リボン */
+.onlybar{
+  display:inline-flex; align-items:center; gap:1.2rem;
+  padding:1rem 2.4rem; border-radius:99rem;
+  background:linear-gradient(90deg, var(--gold), #FFDD8A);
+  color:#3B2400; font-size:2.15rem; font-weight:900; letter-spacing:.06em;
+  margin-bottom:1.8rem; will-change:transform,opacity;
+}
+.onlybar .dot{ width:1.1rem; height:1.1rem; border-radius:50%; background:#3B2400; }
+
+/* ---------- S5: セキュリティ 4アイコン ---------- */
+.secrow{ display:flex; gap:2rem; margin-top:2.6rem; width:100%; max-width:100rem; }
+.secrow.sq{ flex-wrap:wrap; max-width:76rem; }
+.seccard{
+  flex:1; min-width:0; padding:2.1rem 1.6rem;
+  background:rgba(255,255,255,.055); border-radius:1.4rem;
+  border:.16rem solid rgba(140,200,255,.24);
+  display:flex; flex-direction:column; align-items:center; text-align:center;
+  will-change:transform,opacity;
+}
+.secrow.sq .seccard{ flex:0 0 calc(50% - 1.1rem); }
+.seccard .icn{ width:5.6rem; height:5.6rem; margin-bottom:1.1rem; }
+.seccard h4{ font-size:2.25rem; font-weight:900; color:#fff; line-height:1.24; }
+.seccard p{ font-size:1.62rem; font-weight:500; color:#A9C4E2; margin-top:.6rem; line-height:1.45; }
+
+/* ---------- S6: AI 3ステップ ---------- */
+.newbadge{
+  display:inline-flex; align-items:center; gap:1rem;
+  padding:.95rem 2.2rem; border-radius:.7rem;
+  background:var(--red); color:#fff;
+  font-size:2.05rem; font-weight:900; letter-spacing:.1em;
+  margin-bottom:1.7rem; will-change:transform,opacity;
+}
+.steps{ display:flex; align-items:stretch; gap:1.5rem; margin-top:2.6rem; width:100%; max-width:102rem; }
+.steps.sq{ flex-direction:column; max-width:74rem; gap:1.3rem; }
+.step{
+  flex:1; padding:2.2rem 1.8rem; border-radius:1.4rem;
+  background:rgba(255,255,255,.055); border:.16rem solid rgba(140,200,255,.24);
+  display:flex; flex-direction:column; align-items:center; text-align:center;
+  will-change:transform,opacity;
+}
+.steps.sq .step{ flex-direction:row; text-align:left; gap:1.8rem; align-items:center; padding:2rem; }
+.step .sn{
+  width:4.2rem; height:4.2rem; border-radius:50%;
+  background:var(--cyan); color:#05233F;
+  font-size:2.25rem; font-weight:900;
+  display:flex; align-items:center; justify-content:center; flex:0 0 auto;
+  margin-bottom:1.4rem;
+}
+.steps.sq .step .sn{ margin-bottom:0; }
+.step h4{ font-size:2.3rem; font-weight:900; color:#fff; line-height:1.26; }
+.step p{ font-size:1.66rem; font-weight:500; color:#A9C4E2; margin-top:.7rem; line-height:1.5; }
+.arrowdot{ display:flex; align-items:center; color:var(--cyan); font-size:3.2rem; font-weight:900; }
+.steps.sq .arrowdot{ display:none; }
+
+/* ---------- S7: 買い切り vs サブスク ---------- */
+.costwrap{
+  display:flex; align-items:flex-end; justify-content:center;
+  gap:8rem; margin-top:2.6rem; width:100%;
+}
+.costwrap.sq{ gap:5rem; }
+.costcol{ display:flex; flex-direction:column; align-items:center; justify-content:flex-end; }
+.bars{ display:flex; flex-direction:column-reverse; gap:.55rem; align-items:center; }
+.bar{
+  width:20rem; border-radius:.5rem;
+  display:flex; align-items:center; justify-content:center;
+  font-size:1.72rem; font-weight:700; color:#fff;
+  will-change:transform,opacity;
+}
+.bar.yearly{ background:linear-gradient(90deg,#9AA3B4,#7C8697); }
+.bar.yearly.last{ background:linear-gradient(90deg,#E2483A,#C42B1E); }
+.bar.once{ background:linear-gradient(90deg,var(--blue-l),var(--blue-d)); }
+.costlabel{ margin-top:1.5rem; text-align:center; }
+.costlabel .cl1{ font-size:2.45rem; font-weight:900; color:#fff; line-height:1.2; }
+.costlabel .cl2{ font-size:1.78rem; font-weight:600; color:#A9C4E2; margin-top:.5rem; }
+.costlabel .cl1.win{ color:var(--cyan); }
+.vs{
+  align-self:center; margin-bottom:8rem;
+  font-size:3rem; font-weight:900; color:var(--mute); letter-spacing:.1em;
+}
+
+/* ---------- S8: クロージング ---------- */
+.proofrow{ display:flex; gap:2.2rem; margin-top:1.8rem; width:100%; max-width:92rem; }
+.proofrow.sq{ flex-direction:column; gap:1.4rem; max-width:70rem; }
+.proof{
+  flex:1; padding:1.9rem 1.4rem; border-radius:1.4rem;
+  background:rgba(255,255,255,.08); border:.16rem solid rgba(255,255,255,.22);
+  text-align:center; will-change:transform,opacity;
+}
+.proofrow.sq .proof{ display:flex; align-items:baseline; justify-content:center; gap:1.4rem; padding:1.5rem; }
+.proof .pv{ font-size:3.6rem; font-weight:900; color:var(--gold-l); line-height:1; }
+.proof .pl{ font-size:1.76rem; font-weight:700; color:#DCEAF8; margin-top:.7rem; }
+.proofrow.sq .proof .pl{ margin-top:0; }
+
+.speclist{ display:flex; gap:1.3rem; margin-top:1.6rem; flex-wrap:wrap; justify-content:center; }
+.spec{
+  padding:.95rem 2rem; border-radius:99rem;
+  border:.18rem solid rgba(255,255,255,.4);
+  font-size:1.95rem; font-weight:700; color:#fff; white-space:nowrap;
+  will-change:transform,opacity;
+}
+
+/* ---------- 注記バー ---------- */
+.notes{
+  position:absolute; left:0; right:0; bottom:0; z-index:40;
+  padding:1.5rem 5rem;
+  background:linear-gradient(to top, rgba(0,0,0,.62), rgba(0,0,0,0));
+  font-size:1.28rem; line-height:1.5; font-weight:400;
+  color:rgba(255,255,255,.72); text-align:center;
+  will-change:opacity;
+}
+.notes.dark{ color:rgba(10,20,35,.62); background:linear-gradient(to top, rgba(255,255,255,.75), rgba(255,255,255,0)); }
+
+/* ---------- トランジション用ワイプ ---------- */
+.wipe{
+  position:absolute; inset:0; z-index:50; pointer-events:none;
+  background:linear-gradient(100deg, var(--blue-l), var(--blue-d));
+  will-change:transform, opacity;
+}
