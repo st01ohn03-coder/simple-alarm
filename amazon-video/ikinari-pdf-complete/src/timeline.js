@@ -10,7 +10,7 @@
   'use strict';
 
   var FPS = 30;
-  var DUR = 34.0;
+  var DUR = 39.4;
 
   /* ---------- 数学ヘルパ ---------- */
   function clamp(v, a, b) { return v < a ? a : (v > b ? b : v); }
@@ -97,15 +97,17 @@
   var notesEl = $('notes');
   var wipe = $('wipe');
 
+  // ナレーション（tools/narration.py の CUES）と同じ区切り。
+  // どちらかを変えたら、もう一方も必ず合わせること。
   var SCENES = [
-    { el: $('s1'), a: 0.00, b: 4.30 },
-    { el: $('s2'), a: 4.30, b: 8.30 },
-    { el: $('s3'), a: 8.30, b: 13.40 },
-    { el: $('s4'), a: 13.40, b: 18.00 },
-    { el: $('s5'), a: 18.00, b: 22.30 },
-    { el: $('s6'), a: 22.30, b: 26.90 },
-    { el: $('s7'), a: 26.90, b: 30.60 },
-    { el: $('s8'), a: 30.60, b: 34.00 }
+    { el: $('s1'), a: 0.00,  b: 4.30 },   // 4.30s
+    { el: $('s2'), a: 4.30,  b: 8.40 },   // 4.10s
+    { el: $('s3'), a: 8.40,  b: 14.30 },  // 5.90s
+    { el: $('s4'), a: 14.30, b: 18.70 },  // 4.40s
+    { el: $('s5'), a: 18.70, b: 23.90 },  // 5.20s
+    { el: $('s6'), a: 23.90, b: 30.70 },  // 6.80s
+    { el: $('s7'), a: 30.70, b: 36.00 },  // 5.30s
+    { el: $('s8'), a: 36.00, b: 39.40 }   // 3.40s
   ];
 
   /* ---------- 注記（景表法・根拠表示） ---------- */
@@ -114,9 +116,9 @@
   var NOTE3 = '※3 2025年8月時点 ソースネクスト調べ（パッケージ版・ダウンロード版・法人ライセンス版の累計）';
   var NOTE_SUB = '※ 搭載機能は製品により異なります。サブスクリプション型製品との比較は支払い方式の違いを示すもので、金額を表すものではありません。';
   var NOTES = [
-    { a: 5.00, b: 8.30, text: NOTE1 },
-    { a: 26.90, b: 30.60, text: NOTE_SUB },
-    { a: 31.40, b: 34.00, text: NOTE1 + '　' + NOTE3 }
+    { a: 5.00,  b: 8.40,  text: NOTE1 },
+    { a: 30.70, b: 36.00, text: NOTE_SUB },
+    { a: 36.80, b: 39.40, text: NOTE1 + '　' + NOTE3 }
   ];
 
   /* ---------- 動的に作るパーツ ---------- */
@@ -163,29 +165,28 @@
      各シーン
      ============================================================ */
 
-  function sceneS1(t) {
-    typeIn(CH.s1h, t, 0.25, 0.030, 0.36);
+  function sceneS1(τ) {
+    typeIn(CH.s1h, τ, 0.25, 0.030, 0.36);
     // 背景ストライプがゆっくり流れる
-    var k = span(t, 0, 4.3);
+    var k = span(τ, 0, 4.3);
     var st1 = $('s1stripe'), st2 = $('s1stripe2');
-    st1.style.opacity = 0.55 * easeOut(span(t, 0.1, 0.9));
+    st1.style.opacity = 0.55 * easeOut(span(τ, 0.1, 0.9));
     st1.style.transform = 'rotate(-24deg) translate3d(' + lerp(-6, 6, k) + 'rem,0,0)';
-    st2.style.opacity = 0.32 * easeOut(span(t, 0.3, 1.1));
+    st2.style.opacity = 0.32 * easeOut(span(τ, 0.3, 1.1));
     st2.style.transform = 'rotate(-24deg) translate3d(' + lerp(6, -6, k) + 'rem,0,0)';
     // 悩みチップが順に出る
     chips.forEach(function (c, i) {
-      var s = 1.55 + i * 0.22;
-      var kk = easeBack(span(t, s, s + 0.42));
-      c.style.opacity = clamp(span(t, s, s + 0.22), 0, 1);
+      var st = 1.55 + i * 0.22;
+      var kk = easeBack(span(τ, st, st + 0.42));
+      c.style.opacity = clamp(span(τ, st, st + 0.22), 0, 1);
       c.style.transform = 'translate3d(0,' + lerp(2.6, 0, clamp(kk, 0, 1.4)) + 'rem,0) scale(' + lerp(0.86, 1, clamp(kk, 0, 1.2)) + ')';
     });
     // 最後にわずかにズーム（次シーンへの押し出し）
-    var z = easeInOut(span(t, 3.75, 4.30));
+    var z = easeInOut(span(τ, 3.75, 4.30));
     $('s1').style.transform = 'scale(' + lerp(1, 1.06, z) + ')';
   }
 
-  function sceneS2(t) {
-    var τ = t - 4.30;
+  function sceneS2(τ) {
     // パッケージが奥から出る
     var k = easeOutQuint(span(τ, 0.05, 0.85));
     set($('s2pkgwrap'), k, 0, lerp(2.4, 0, k), lerp(0.80, 1, k));
@@ -196,40 +197,36 @@
     var ke = easeOutQuint(span(τ, 0.95, 1.55));
     set($('s2ed'), ke, lerp(-3.0, 0, ke), 0, 1);
     tags.forEach(function (el, i) {
-      var s = 1.45 + i * 0.09;
-      var kk = easeOut(span(τ, s, s + 0.36));
+      var st = 1.45 + i * 0.09;
+      var kk = easeOut(span(τ, st, st + 0.36));
       el.style.opacity = kk;
       el.style.transform = 'translate3d(0,' + lerp(1.4, 0, kk) + 'rem,0) scale(' + lerp(0.9, 1, kk) + ')';
     });
     // 全体をゆっくり寄せる（生きた画に見せる）
-    var drift = span(τ, 0, 4.0);
-    $('s2reveal').style.transform = 'scale(' + lerp(1, 1.028, drift) + ')';
+    $('s2reveal').style.transform = 'scale(' + lerp(1, 1.028, span(τ, 0, 4.1)) + ')';
   }
 
-  function sceneS3(t) {
-    var τ = t - 8.30;
+  function sceneS3(τ) {
     rise($('s3eye'), τ, 0.10, 0.45, 1.6);
-    typeIn(CH.s3h, t, 8.30 + 0.24, 0.026, 0.34);
+    typeIn(CH.s3h, τ, 0.24, 0.026, 0.34);
     fcards.forEach(function (c, i) {
-      var s = 0.80 + i * 0.17;
-      var kk = easeOutQuint(span(τ, s, s + 0.60));
-      c.style.opacity = clamp(span(τ, s, s + 0.26), 0, 1);
+      var st = 0.80 + i * 0.17;
+      var kk = easeOutQuint(span(τ, st, st + 0.60));
+      c.style.opacity = clamp(span(τ, st, st + 0.26), 0, 1);
       c.style.transform = 'translate3d(0,' + lerp(4.2, 0, kk) + 'rem,0) scale(' + lerp(0.94, 1, kk) + ')';
     });
-    var drift = span(τ, 0, 5.1);
-    $('s3grid').style.marginTop = lerp(3.4, 3.0, drift) + 'rem';
+    $('s3grid').style.marginTop = lerp(3.4, 3.0, span(τ, 0, 5.9)) + 'rem';
   }
 
-  function sceneS4(t) {
-    var τ = t - 13.40;
+  function sceneS4(τ) {
     var ko = easeBack(span(τ, 0.06, 0.52));
     $('s4only').style.opacity = clamp(span(τ, 0.06, 0.28), 0, 1);
     $('s4only').style.transform = 'scale(' + lerp(0.7, 1, clamp(ko, 0, 1.25)) + ')';
-    typeIn(CH.s4h, t, 13.40 + 0.34, 0.028, 0.34);
+    typeIn(CH.s4h, τ, 0.34, 0.028, 0.34);
     rise($('s4sub'), τ, 0.95, 0.5, 1.6);
     // スクリーンショットがゆっくり寄る（Ken Burns）
     var kf = easeOutQuint(span(τ, 0.75, 1.45));
-    var drift = span(τ, 0.75, 4.6);
+    var drift = span(τ, 0.75, 4.4);
     set($('s4frame'), kf, 0, lerp(3.4, 0, kf), lerp(0.94, 1.0, kf) * lerp(1, 1.05, drift));
     // ハイライト枠とコールアウト
     var ks = easeBack(span(τ, 1.75, 2.25));
@@ -240,49 +237,46 @@
     $('s4call').style.transform = 'translate3d(0,' + lerp(1.4, 0, clamp(kc, 0, 1.2)) + 'rem,0) scale(' + lerp(0.8, 1, clamp(kc, 0, 1.2)) + ')';
   }
 
-  function sceneS5(t) {
-    var τ = t - 18.00;
+  function sceneS5(τ) {
     var ko = easeBack(span(τ, 0.06, 0.52));
     $('s5only').style.opacity = clamp(span(τ, 0.06, 0.28), 0, 1);
     $('s5only').style.transform = 'scale(' + lerp(0.7, 1, clamp(ko, 0, 1.25)) + ')';
-    typeIn(CH.s5h, t, 18.00 + 0.30, 0.030, 0.34);
+    typeIn(CH.s5h, τ, 0.30, 0.030, 0.34);
     seccards.forEach(function (c, i) {
-      var s = 0.95 + i * 0.16;
-      var kk = easeOutQuint(span(τ, s, s + 0.58));
-      c.style.opacity = clamp(span(τ, s, s + 0.26), 0, 1);
+      var st = 0.95 + i * 0.16;
+      var kk = easeOutQuint(span(τ, st, st + 0.58));
+      c.style.opacity = clamp(span(τ, st, st + 0.26), 0, 1);
       c.style.transform = 'translate3d(0,' + lerp(3.8, 0, kk) + 'rem,0) scale(' + lerp(0.93, 1, kk) + ')';
     });
   }
 
-  function sceneS6(t) {
-    var τ = t - 22.30;
+  function sceneS6(τ) {
     var kn = easeBack(span(τ, 0.05, 0.50));
     $('s6new').style.opacity = clamp(span(τ, 0.05, 0.26), 0, 1);
     $('s6new').style.transform = 'scale(' + lerp(0.6, 1, clamp(kn, 0, 1.3)) + ') rotate(' + lerp(-8, 0, clamp(kn, 0, 1.2)) + 'deg)';
-    typeIn(CH.s6h, t, 22.30 + 0.32, 0.030, 0.34);
+    typeIn(CH.s6h, τ, 0.32, 0.030, 0.34);
     rise($('s6sub'), τ, 0.92, 0.5, 1.6);
     stepEls.forEach(function (el, i) {
-      var s = 1.20 + i * 0.20;
-      var kk = easeOutQuint(span(τ, s, s + 0.55));
+      var st = 1.20 + i * 0.20;
+      var kk = easeOutQuint(span(τ, st, st + 0.55));
       if (el.classList.contains('arrowdot')) {
         el.style.opacity = kk * 0.9;
         el.style.transform = 'translate3d(' + lerp(-1.2, 0, kk) + 'rem,0,0)';
       } else {
-        el.style.opacity = clamp(span(τ, s, s + 0.26), 0, 1);
+        el.style.opacity = clamp(span(τ, st, st + 0.26), 0, 1);
         el.style.transform = 'translate3d(' + lerp(3.2, 0, kk) + 'rem,0,0) scale(' + lerp(0.95, 1, kk) + ')';
       }
     });
   }
 
-  function sceneS7(t) {
-    var τ = t - 26.90;
+  function sceneS7(τ) {
     rise($('s7eye'), τ, 0.08, 0.42, 1.4);
-    typeIn(CH.s7h, t, 26.90 + 0.22, 0.024, 0.32);
+    typeIn(CH.s7h, τ, 0.22, 0.024, 0.32);
     // サブスクの棒が毎年積み上がる
     subBars.forEach(function (b, i) {
-      var s = 0.95 + i * 0.20;
-      var kk = easeBack(span(τ, s, s + 0.44));
-      b.style.opacity = clamp(span(τ, s, s + 0.20), 0, 1);
+      var st = 0.95 + i * 0.20;
+      var kk = easeBack(span(τ, st, st + 0.44));
+      b.style.opacity = clamp(span(τ, st, st + 0.20), 0, 1);
       b.style.transform = 'scaleX(' + lerp(0.55, 1, clamp(kk, 0, 1.2)) + ')';
     });
     // 買い切りは1本だけ
@@ -298,25 +292,23 @@
     for (var i = 0; i < cls.length; i++) rise(cls[i], τ, 2.05 + i * 0.12, 0.45, 1.4);
   }
 
-  function sceneS8(t) {
-    var τ = t - 30.60;
+  function sceneS8(τ) {
     var k = easeOutQuint(span(τ, 0.05, 0.75));
     set($('s8reveal'), k, 0, lerp(2.4, 0, k), lerp(0.90, 1, k));
     proofs.forEach(function (c, i) {
-      var s = 0.55 + i * 0.15;
-      var kk = easeOutQuint(span(τ, s, s + 0.55));
-      c.style.opacity = clamp(span(τ, s, s + 0.24), 0, 1);
+      var st = 0.55 + i * 0.15;
+      var kk = easeOutQuint(span(τ, st, st + 0.55));
+      c.style.opacity = clamp(span(τ, st, st + 0.24), 0, 1);
       c.style.transform = 'translate3d(0,' + lerp(3.2, 0, kk) + 'rem,0) scale(' + lerp(0.94, 1, kk) + ')';
     });
     specs.forEach(function (c, i) {
-      var s = 1.25 + i * 0.13;
-      var kk = easeBack(span(τ, s, s + 0.46));
-      c.style.opacity = clamp(span(τ, s, s + 0.22), 0, 1);
+      var st = 1.25 + i * 0.13;
+      var kk = easeBack(span(τ, st, st + 0.46));
+      c.style.opacity = clamp(span(τ, st, st + 0.22), 0, 1);
       c.style.transform = 'scale(' + lerp(0.8, 1, clamp(kk, 0, 1.2)) + ')';
     });
-    // 最後の1秒でゆっくり引く
-    var out = span(τ, 2.2, 3.4);
-    $('s8').style.transform = 'scale(' + lerp(1, 1.03, out) + ')';
+    // 最後にゆっくり引く
+    $('s8').style.transform = 'scale(' + lerp(1, 1.03, span(τ, 2.2, 3.4)) + ')';
   }
 
   var RENDERERS = [sceneS1, sceneS2, sceneS3, sceneS4, sceneS5, sceneS6, sceneS7, sceneS8];
@@ -340,7 +332,7 @@
       }
       sc.el.style.opacity = vis;
       sc.el.style.visibility = vis > 0.002 ? 'visible' : 'hidden';
-      if (vis > 0.002) RENDERERS[i](t);
+      if (vis > 0.002) RENDERERS[i](t - sc.a);
     });
 
     // --- 注記バー ---

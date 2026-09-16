@@ -6,11 +6,11 @@ ASIN **B0FVFTZSM7** 向けの商品動画。HTML/CSS/JS でアニメーション
 | | 16:9 | 1:1 |
 |---|---|---|
 | 解像度 | 1920×1080 | 1080×1080 |
-| 尺 | 34.0秒 | 34.0秒 |
+| 尺 | 39.4秒 | 39.4秒 |
 | fps | 30 | 30 |
 | 映像 | H.264 High / yuv420p | H.264 High / yuv420p |
-| 音声 | 無音 AAC 48kHz | 無音 AAC 48kHz |
-| サイズ | 約10MB | 約6MB |
+| 音声 | 日本語ナレーション AAC 48kHz / -16 LUFS | 同左 |
+| サイズ | 約11MB | 約7MB |
 
 出力先: `dist/`
 
@@ -22,10 +22,15 @@ ASIN **B0FVFTZSM7** 向けの商品動画。HTML/CSS/JS でアニメーション
 ## 作り直す
 
 ```bash
-npm install                 # playwright と ffmpeg を入れる
-node tools/render.js --preset 16x9
+npm install                            # playwright と ffmpeg を入れる
+pip install edge-tts                   # 音声合成
+python3 tools/narration.py             # dist/narration.m4a を作る
+node tools/render.js --preset 16x9     # 映像 + ナレーションで書き出す
 node tools/render.js --preset 1x1
 ```
+
+ナレーションは `dist/narration.m4a` があれば自動で多重化される。
+無ければ無音トラックになり、その旨が警告に出る。
 
 その他のオプション:
 
@@ -33,6 +38,7 @@ node tools/render.js --preset 1x1
 node tools/render.js --preset 9x16              # 縦型 1080×1920
 node tools/render.js --w 1280 --h 720 --fps 30  # 任意サイズ
 node tools/render.js --crf 20 --out dist/a.mp4  # 画質と出力先を指定
+node tools/render.js --audio none               # ナレーションを入れず無音にする
 ```
 
 環境変数で実行ファイルを差し替えられる。
@@ -53,6 +59,7 @@ node tools/render.js --crf 20 --out dist/a.mp4  # 画質と出力先を指定
 | 出るタイミング・動き・尺 | `src/timeline.js` |
 | 色・文字サイズ・レイアウト | `src/styles.css` |
 | 製品画面・パッケージ画像 | `src/assets/*.jpg` |
+| ナレーション原稿・声・速度 | `tools/narration.py` |
 
 `src/video.html` をそのままブラウザで開くとループ再生でプレビューできる。
 
@@ -72,6 +79,48 @@ window.__video = { fps, duration, frames, seek(t), seekFrame(n) }
 `src/timeline.js` の `DUR` と `SCENES` の `a` / `b`（各シーンの開始・終了秒）を変える。
 シーンは 0.34 秒かけてフェードインし、0.30 秒かけてフェードアウトする。
 
+**シーン区間は `src/timeline.js` が唯一の正。**
+`tools/narration.py` はそこから区間を読み出して各セリフを配置するので、
+尺を変えたらナレーションを作り直すだけで自動的に追従する。
+
+```bash
+python3 tools/narration.py --check   # セリフがシーンに収まるかだけ確認
+```
+
+---
+
+## ナレーション
+
+| | |
+|---|---|
+| 音声合成 | edge-tts（Microsoft Edge のニューラル音声） |
+| 声 | `ja-JP-NanamiNeural`（女性）。`--voice ja-JP-KeitaNeural` で男性 |
+| 速度 | `+6%` |
+| ラウドネス | -16 LUFS / トゥルーピーク -5 dBFS |
+| 環境音 | 自前で合成した控えめなパッド。ナレーションの約 20 dB 下 |
+
+```bash
+python3 tools/narration.py                      # 既定の設定で作る
+python3 tools/narration.py --voice ja-JP-KeitaNeural
+python3 tools/narration.py --rate +10%          # 速く読ませる
+python3 tools/narration.py --no-music           # 環境音を入れない
+python3 tools/narration.py --music-db -24       # 環境音をもっと下げる
+```
+
+`--check` は各セリフの長さを実測して、シーンの終わりをはみ出さないかを表に出す。
+原稿を書き換えたら必ずこれを通すこと。
+
+### 音まわりの落とし穴（踏んだので残す）
+
+- **`amix` は入力が終わるたびに残りを再正規化する。** 短いセリフを並べると
+  全体に右肩上がりのゲインがかかる（実測で 12.9 dB の差）。だからミックスは
+  ffmpeg ではなく Python で足し合わせている。
+- **`alimiter` は `level`（自動レベル）が既定でオン。** 必ず `level=disabled` にする。
+- **`apad` は無限に音を作り続ける。** 尺は出力側の `-t` で切る。`atrim` 任せだと
+  ffmpeg が終了しない。
+- 音量は動的な正規化（`loudnorm`）に任せず、実測して静的ゲインで当てている。
+  セリフ間の音量差は 1.1 dB に収まっている。
+
 ### レイアウトが崩れていないか確かめる
 
 `1rem = キャンバス幅の1%` に固定してあるので、16:9 と 1:1 で同じ比率のレイアウトになる。
@@ -85,6 +134,9 @@ window.__video = { fps, duration, frames, seek(t), seekFrame(n) }
 - **価格は動画に入れていない。** 理由は `docs/ANALYSIS.md` 第4章。
 - **実績数値の注記（※1・※3）を消さないこと。** 自社調べの数値なので、調査主体・対象・期間の表示が要る。
 - 画像素材は商品ページ掲載画像から切り出したもの。公開前に権利関係を確認すること。
+- 環境音は自前で合成した original の音。既成曲は使っていないので権利処理は不要。
+- **ミュートでも成立するように作ってある。** 伝えたいことはすべて画面文字に出ている
+  ので、ナレーションは補助。音声を外しても情報は欠けない。
 - フォントは Noto Sans JP（SIL Open Font License 1.1）。使用文字だけをサブセット化して `src/fonts/` に同梱している。
   文言に新しい漢字を足したときは、サブセットを作り直さないと豆腐になる。
 

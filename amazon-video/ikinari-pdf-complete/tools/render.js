@@ -8,6 +8,10 @@
      node tools/render.js                 # 16:9 1920x1080
      node tools/render.js --preset 1x1    # 1:1  1080x1080
      node tools/render.js --w 1280 --h 720 --fps 30 --out dist/foo.mp4
+     node tools/render.js --audio none    # ナレーションを入れず無音にする
+
+   音声は既定で dist/narration.m4a を多重化する。無ければ無音トラックになる。
+   音声の作り方は tools/narration.py を参照。
    ============================================================ */
 'use strict';
 
@@ -34,6 +38,7 @@ const H    = parseInt(arg('h', preset.h), 10);
 const FPS  = parseInt(arg('fps', '30'), 10);
 const CRF  = arg('crf', '18');
 const QUAL = parseInt(arg('quality', '96'), 10);
+const AUDIO = arg('audio', path.join('dist', 'narration.m4a'));
 const OUT  = path.resolve(ROOT, arg('out', path.join('dist', preset.out)));
 const PAGE = 'file://' + path.join(ROOT, 'src', 'video.html');
 
@@ -88,17 +93,27 @@ function chromePath() {
   console.log(`▶ ${path.basename(OUT)}  ${W}x${H} @ ${FPS}fps  ${meta.duration}s  (${total} frames)`);
 
   /* ---------- ffmpeg: JPEG パイプ → H.264 MP4 ---------- */
+  // 音声トラックは必ず付ける。ナレーションが無ければ無音の AAC を入れる
+  // （音声トラックなしの MP4 を弾く入稿先があるため）。
+  const audioPath = AUDIO === 'none' ? null : path.resolve(ROOT, AUDIO);
+  const hasAudio = audioPath && fs.existsSync(audioPath);
+  if (audioPath && !hasAudio) {
+    console.warn(`  音声が見つかりません: ${audioPath}\n  無音で書き出します（作り方は tools/narration.py）`);
+  }
+  const audioIn = hasAudio
+    ? ['-i', audioPath]
+    : ['-f', 'lavfi', '-i', 'anullsrc=channel_layout=stereo:sample_rate=48000'];
+
   const ff = spawn(ffmpegPath(), [
     '-y', '-hide_banner', '-loglevel', 'error',
     '-f', 'image2pipe', '-framerate', String(FPS), '-i', 'pipe:0',
-    // Amazon 入稿用に無音の AAC トラックを付けておく（音声なしで弾かれるのを防ぐ）
-    '-f', 'lavfi', '-i', 'anullsrc=channel_layout=stereo:sample_rate=48000',
+    ...audioIn,
     '-map', '0:v', '-map', '1:a',
     '-c:v', 'libx264', '-preset', 'slow', '-crf', CRF,
     '-profile:v', 'high', '-level', '4.1',
     '-pix_fmt', 'yuv420p',
     '-x264-params', 'keyint=' + (FPS * 2) + ':min-keyint=' + FPS + ':scenecut=0',
-    '-c:a', 'aac', '-b:a', '128k', '-ar', '48000', '-shortest',
+    '-c:a', 'aac', '-b:a', '192k', '-ar', '48000', '-shortest',
     '-movflags', '+faststart',
     '-r', String(FPS),
     OUT
