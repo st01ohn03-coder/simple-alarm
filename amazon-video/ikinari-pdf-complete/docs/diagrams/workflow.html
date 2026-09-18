@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8">
+<title>業務フロー図</title>
+<link rel="stylesheet" href="fonts/fonts.css">
+<link rel="stylesheet" href="style.css">
+<style>
+.flow{display:flex;flex-direction:column;gap:14px;margin-top:30px}
+.stage{
+  display:grid; grid-template-columns:92px 1fr 352px; gap:22px; align-items:stretch;
+  background:rgba(255,255,255,.045); border:1px solid rgba(140,200,255,.20);
+  border-left:5px solid var(--blue-l); border-radius:13px; padding:17px 20px;
+}
+.stage.human{border-left-color:var(--gold); background:rgba(245,178,26,.055)}
+.stage.gate{border-left-color:var(--red); background:rgba(226,60,46,.055)}
+.num{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  border-right:1px solid rgba(140,200,255,.18);
+}
+.num b{font-size:34px;font-weight:900;color:var(--blue-l);line-height:1}
+.stage.human .num b{color:var(--gold)}
+.stage.gate  .num b{color:var(--red)}
+.num span{font-size:11.5px;font-weight:700;letter-spacing:.06em;color:#7D95B2}
+.body h3{font-size:22px;font-weight:900;line-height:1.3;margin-bottom:5px}
+.body p{font-size:15px;font-weight:500;color:#A9C4E2;line-height:1.62}
+.body .out{margin-top:8px;font-size:13.5px;color:#7D95B2}
+.body .out b{color:#9FC0E0;font-weight:700}
+.cmd{
+  display:flex;flex-direction:column;justify-content:center;gap:7px;
+  border-left:1px solid rgba(140,200,255,.18);padding-left:20px;
+}
+.cmd code{display:block;padding:6px 10px;font-size:12px;line-height:1.45;white-space:nowrap}
+.cmd .manual{
+  font-size:13.5px;font-weight:700;color:#3B2400;background:var(--gold-l);
+  border-radius:6px;padding:7px 11px;text-align:center;line-height:1.45;
+}
+.arrow{display:flex;justify-content:center;color:#2E5480;font-size:19px;line-height:.6;margin:-6px 0}
+.loop{
+  display:flex;align-items:center;gap:13px;margin-top:16px;padding:14px 20px;
+  border:1px dashed rgba(226,60,46,.55);border-radius:11px;background:rgba(226,60,46,.05);
+  font-size:15px;color:#E9B8B2;font-weight:600;line-height:1.55;
+}
+.loop b{color:#FF9E92;font-weight:900}
+</style></head>
+<body>
+<div class="board" id="board">
+  <div class="eyebrow">AMAZON PRODUCT VIDEO — WORKFLOW</div>
+  <h1>Amazon 商品動画 制作フロー</h1>
+  <p class="lead">
+    ASIN を渡してから納品までの6工程。青は<b>コマンドで自動化済み</b>、金は<b>人が判断する工程</b>、赤は<b>通らないと先に進めない検品</b>。
+    1商品あたり、判断工程を除けば実行時間は5分ほど。
+  </p>
+  <div class="legend">
+    <div class="lg"><span class="sw auto"></span>自動（コマンド1本）</div>
+    <div class="lg"><span class="sw human"></span>人が判断する</div>
+    <div class="lg"><span class="sw gate"></span>検品ゲート</div>
+  </div>
+
+  <div class="flow">
+    <div class="stage">
+      <div class="num"><b>1</b><span>調査</span></div>
+      <div class="body">
+        <h3>商品ページから素材と情報を集める</h3>
+        <p>タイトル・箇条書き・A+（商品紹介）本文・比較表・星の分布・商品画像・A+画像を一括取得する。</p>
+        <div class="out"><b>成果物</b>　build/&lt;ASIN&gt;/product.json ／ img/*.jpg（35枚前後）</div>
+      </div>
+      <div class="cmd"><code>tools/pipeline.sh fetch &lt;ASIN&gt;</code></div>
+    </div>
+    <div class="arrow">▼</div>
+
+    <div class="stage human">
+      <div class="num"><b>2</b><span>設計</span></div>
+      <div class="body">
+        <h3>構成と原稿を決める</h3>
+        <p>上位版と下位版の差、実績の根拠、レビューの傾向から、潰すべき購買障壁を決める。シーン構成・画面文字・ナレーション原稿・使う画像を確定させる。</p>
+        <div class="out"><b>触るもの</b>　src/video.html ／ src/assets/ ／ tools/narration.py の LINES ／ src/timeline.js の SCENES</div>
+      </div>
+      <div class="cmd">
+        <div class="manual">人（または Claude）が判断</div>
+        <code>python3 tools/narration.py --check</code>
+      </div>
+    </div>
+    <div class="arrow">▼</div>
+
+    <div class="stage">
+      <div class="num"><b>3</b><span>文字</span></div>
+      <div class="body">
+        <h3>フォントをサブセット化する</h3>
+        <p>画面に出る文字だけを Noto Sans JP から切り出す。ここを飛ばすと、新しく足した漢字が豆腐になる。</p>
+        <div class="out"><b>成果物</b>　src/fonts/*.woff2（4ウェイト・各60KB前後）</div>
+      </div>
+      <div class="cmd"><code>node tools/subset-fonts.js</code></div>
+    </div>
+    <div class="arrow">▼</div>
+
+    <div class="stage">
+      <div class="num"><b>4</b><span>音声</span></div>
+      <div class="body">
+        <h3>ナレーションを合成する</h3>
+        <p>セリフごとに合成し、実測して −19 LUFS に揃えてから配置。環境音を20dB下に敷いて −16 LUFS で書き出す。シーン区間は timeline.js から読むので、尺を変えても自動で追従する。</p>
+        <div class="out"><b>成果物</b>　dist/narration.m4a（39.4秒 / 約0.9MB）</div>
+      </div>
+      <div class="cmd"><code>python3 tools/narration.py</code></div>
+    </div>
+    <div class="arrow">▼</div>
+
+    <div class="stage">
+      <div class="num"><b>5</b><span>映像</span></div>
+      <div class="body">
+        <h3>動画を書き出す</h3>
+        <p>ヘッドレス Chromium で1フレームずつ描いて、JPEG を ffmpeg に直接流す。中間ファイルを作らないのでフレーム落ちが起きない。16:9 と 1:1 を同じ実装から出す。</p>
+        <div class="out"><b>成果物</b>　dist/*_16x9_1080p.mp4 ／ *_1x1_1080.mp4（各60秒・40秒で完了）</div>
+      </div>
+      <div class="cmd"><code>node tools/render.js --preset 16x9</code><code>node tools/render.js --preset 1x1</code></div>
+    </div>
+    <div class="arrow">▼</div>
+
+    <div class="stage gate">
+      <div class="num"><b>6</b><span>検品</span></div>
+      <div class="body">
+        <h3>納品できる状態か機械で確かめる</h3>
+        <p>全シーンのレイアウトが余白に収まっているか（16:9・1:1 とも）、JSエラーがないか、解像度・コーデック・fps・音声トラック、ラウドネスとトゥルーピーク、映像と音声の尺ずれ。34項目。</p>
+        <div class="out"><b>落ちたら</b>　②へ戻る。1件でも外れると終了コードが 0 にならない</div>
+      </div>
+      <div class="cmd"><code>node tools/qa.js</code></div>
+    </div>
+  </div>
+
+  <div class="loop">
+    <b>⟲</b>
+    <div>検品で落ちた項目は、ほぼ②の設計に原因がある。文言を足してレイアウトがはみ出した、原稿が長くてシーンをはみ出した、のどちらか。②に戻って直し、③以降をやり直す。</div>
+  </div>
+
+  <div class="foot">
+    <b>自動化していない理由</b>　②の構成と原稿は、商品ごとに「何が購買障壁か」を読み解く工程で、機械的な変換では決まらない。
+    ここだけは人（または Claude）が判断し、残りはすべてコマンドに寄せている。<br>
+    <b>価格は動画に入れない</b>　Amazon の商品動画ガイドラインで価格・割引表記は認められていない。買い切りの訴求は支払い回数の比較に置き換える。詳しくは docs/ANALYSIS.md 第4章。
+  </div>
+</div>
+</body></html>

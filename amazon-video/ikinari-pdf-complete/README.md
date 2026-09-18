@@ -14,23 +14,52 @@ ASIN **B0FVFTZSM7** 向けの商品動画。HTML/CSS/JS でアニメーション
 
 出力先: `dist/`
 
+- [`docs/WORKFLOW.md`](docs/WORKFLOW.md) — 制作フロー。他の商品で回すときの手順もここ
 - [`docs/ANALYSIS.md`](docs/ANALYSIS.md) — 商品ページ・A+ の分析と、動画構成の根拠
 - [`docs/SCRIPT.md`](docs/SCRIPT.md) — 絵コンテ・台本・ナレーション原稿
+
+![制作フロー](docs/workflow.png)
 
 ---
 
 ## 作り直す
 
 ```bash
-npm install                            # playwright と ffmpeg を入れる
-pip install edge-tts                   # 音声合成
+npm install            # playwright と ffmpeg を入れる
+pip install edge-tts   # 音声合成
+
+tools/pipeline.sh build   # フォント → ナレーション → 映像
+tools/pipeline.sh qa      # 検品（34項目）
+```
+
+個別に叩くなら次のとおり。
+
+```bash
+node tools/subset-fonts.js             # フォントのサブセット化
 python3 tools/narration.py             # dist/narration.m4a を作る
 node tools/render.js --preset 16x9     # 映像 + ナレーションで書き出す
 node tools/render.js --preset 1x1
+node tools/qa.js                       # 検品
 ```
 
 ナレーションは `dist/narration.m4a` があれば自動で多重化される。
 無ければ無音トラックになり、その旨が警告に出る。
+
+## 別の商品で作る
+
+```bash
+tools/pipeline.sh all B0XXXXXXXX
+```
+
+商品ページから素材と情報を集めたあと、構成と原稿を決める工程で一度止まる。
+そこだけは人（または Claude）の判断が要る。手順は [`docs/WORKFLOW.md`](docs/WORKFLOW.md) にある。
+
+| コマンド | 内容 |
+|---|---|
+| `tools/pipeline.sh fetch <ASIN>` | 商品ページから素材と情報を集める |
+| `tools/pipeline.sh build` | フォント・ナレーション・映像 |
+| `tools/pipeline.sh qa` | 検品 |
+| `tools/pipeline.sh all <ASIN>` | fetch してから、設計工程の指示を出して止まる |
 
 その他のオプション:
 
@@ -60,6 +89,8 @@ node tools/render.js --audio none               # ナレーションを入れず
 | 色・文字サイズ・レイアウト | `src/styles.css` |
 | 製品画面・パッケージ画像 | `src/assets/*.jpg` |
 | ナレーション原稿・声・速度 | `tools/narration.py` |
+| 検品の基準値 | `tools/qa.js` の `LIMITS` |
+| フロー図・役割分担図 | `docs/diagrams/*.html` |
 
 `src/video.html` をそのままブラウザで開くとループ再生でプレビューできる。
 
@@ -143,8 +174,19 @@ python3 tools/narration.py --music-db -24       # 環境音をもっと下げる
 ### フォントのサブセットを作り直す
 
 ```bash
-node tools/subset-fonts.js
+node tools/subset-fonts.js             # 動画本編 → src/fonts/
+node tools/subset-fonts.js --diagrams  # 図版     → docs/diagrams/fonts/
 ```
 
-`src/video.html` と `src/timeline.js` に出てくる文字を集めて Google Fonts から取り直し、
-`src/fonts/` の woff2 と `tools/subset-chars.txt` を更新する。
+対象ファイルに出てくる文字を集めて Google Fonts から取り直し、
+woff2・`fonts.css`・`subset-chars.txt` を更新する。
+
+### 図を作り直す
+
+```bash
+node tools/render-diagrams.js          # docs/diagrams/*.html → docs/*.png
+node tools/render-diagrams.js workflow # 1枚だけ
+```
+
+図の原本は `docs/diagrams/` の HTML。2倍解像度で撮っている。
+文言に新しい漢字を足したときは、先に `--diagrams` でフォントを作り直すこと。

@@ -1,10 +1,12 @@
 #!/usr/bin/env node
 /* ============================================================
-   src/video.html と src/timeline.js で実際に使っている文字だけを
-   集めて、Noto Sans JP のサブセット woff2 を取り直す。
+   指定したファイルで実際に使っている文字だけを集めて、
+   Noto Sans JP のサブセット woff2 を取り直す。
    文言に新しい漢字を足したら、これを実行しないと豆腐になる。
 
-     node tools/subset-fonts.js
+     node tools/subset-fonts.js            # 動画本編 → src/fonts/
+     node tools/subset-fonts.js --diagrams # 図版     → docs/diagrams/fonts/
+     node tools/subset-fonts.js --sources src/video.html --out src/fonts
    ============================================================ */
 'use strict';
 const fs = require('fs');
@@ -12,10 +14,21 @@ const path = require('path');
 const https = require('https');
 const { execFileSync } = require('child_process');
 
-const ROOT     = path.resolve(__dirname, '..');
-const SRC      = path.join(ROOT, 'src');
-const FONT_DIR = path.join(SRC, 'fonts');
-const WEIGHTS  = [400, 500, 700, 900];
+const ROOT    = path.resolve(__dirname, '..');
+const WEIGHTS = [400, 500, 700, 900];
+
+function arg(name, def) {
+  const i = process.argv.indexOf('--' + name);
+  return i > -1 && process.argv[i + 1] ? process.argv[i + 1] : def;
+}
+
+// 既定は動画本編。--diagrams なら図版用。--sources / --out で任意に指定できる。
+const DIAGRAMS = process.argv.includes('--diagrams');
+const SOURCES = arg('sources',
+  DIAGRAMS ? 'docs/diagrams/workflow.html,docs/diagrams/roles.html,docs/diagrams/style.css'
+           : 'src/video.html,src/timeline.js'
+).split(',').map(f => path.resolve(ROOT, f.trim()));
+const FONT_DIR = path.resolve(ROOT, arg('out', DIAGRAMS ? 'docs/diagrams/fonts' : 'src/fonts'));
 const UA = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36';
 
 /* 常に入れておく文字（記号・英数字） */
@@ -24,19 +37,31 @@ const ALWAYS =
   '※／・〜〔〕「」『』（）【】←→↑↓●○◯■□★☆＋－×÷＝％￥…‥、。›‹➜';
 
 function collect() {
-  const html = fs.readFileSync(path.join(SRC, 'video.html'), 'utf8');
-  const js   = fs.readFileSync(path.join(SRC, 'timeline.js'), 'utf8');
-
-  // HTML: タグと script/style を落として本文だけ
-  let body = html.replace(/<(script|style)\b[^>]*>[\s\S]*?<\/\1>/g, '');
-  body = body.replace(/<[^>]+>/g, '\n');
-  body = body.replace(/&[a-z]+;|&#\d+;/gi, ' ');
-
-  // JS: 文字列リテラル（注記やラベル）
-  const lits = (js.match(/'[^'\\\n]*'/g) || []).concat(js.match(/"[^"\\\n]*"/g) || []).join('');
-
-  const set = new Set((body + lits + ALWAYS).split(''));
+  let text = ALWAYS;
+  for (const file of SOURCES) {
+    if (!fs.existsSync(file)) { console.warn('  見つかりません（飛ばします）: ' + file); continue; }
+    const raw = fs.readFileSync(file, 'utf8');
+    if (/\.html?$/i.test(file)) {
+      // HTML: タグと script/style を落として本文だけ。
+      // ただし content: '…' など CSS 側の文字も拾いたいので style は文字列だけ残す。
+      const styles = (raw.match(/<style\b[^>]*>([\s\S]*?)<\/style>/g) || []).join('');
+      let body = raw.replace(/<(script|style)\b[^>]*>[\s\S]*?<\/\1>/g, '');
+      body = body.replace(/<[^>]+>/g, '\n').replace(/&[a-z]+;|&#\d+;/gi, ' ');
+      text += body + quoted(styles);
+    } else {
+      // JS / CSS: 文字列リテラル（注記やラベル、content の値）
+      text += quoted(raw);
+    }
+  }
+  const set = new Set(text.split(''));
   return [...set].filter(c => c.trim() && c.codePointAt(0) > 31).sort().join('');
+}
+
+/** ソース中のクォートで囲まれた文字列をすべて連結して返す */
+function quoted(src) {
+  return (src.match(/'[^'\\\n]*'/g) || [])
+    .concat(src.match(/"[^"\\\n]*"/g) || [])
+    .join('');
 }
 
 function get(url) {
@@ -54,9 +79,10 @@ function get(url) {
 
 (async () => {
   const text = collect();
+  console.log(`対象: ${SOURCES.map(f => path.relative(ROOT, f)).join(', ')}`);
   console.log('使用文字数:', text.length);
   fs.mkdirSync(FONT_DIR, { recursive: true });
-  fs.writeFileSync(path.join(__dirname, 'subset-chars.txt'), text);
+  fs.writeFileSync(path.join(FONT_DIR, 'subset-chars.txt'), text);
 
   for (const w of WEIGHTS) {
     const cssUrl = 'https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@' + w +
@@ -69,5 +95,20 @@ function get(url) {
     fs.writeFileSync(out, buf);
     console.log('  ' + path.basename(out), buf.length, 'bytes');
   }
-  console.log('完了。src/fonts/ を更新しました。');
+  writeFontCss();
+  console.log(`完了。${path.relative(ROOT, FONT_DIR)}/ を更新しました。`);
 })().catch(e => { console.error(e.message); process.exit(1); });
+
+/** @font-face を書き出す（フォントと同じ場所に置く） */
+function writeFontCss() {
+  const faces = WEIGHTS.map(w => `@font-face{
+  font-family:'Noto Sans JP'; font-style:normal; font-weight:${w};
+  src:url('NotoSansJP-${w}.woff2') format('woff2'); font-display:block;
+}`).join('\n');
+  fs.writeFileSync(path.join(FONT_DIR, 'fonts.css'),
+`/* Noto Sans JP (SIL Open Font License 1.1)
+   ここで使う文字だけをサブセット化した woff2。
+   再生成: node tools/subset-fonts.js${DIAGRAMS ? ' --diagrams' : ''} */
+${faces}
+`);
+}

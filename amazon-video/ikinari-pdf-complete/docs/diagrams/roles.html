@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8">
+<title>役割分担図</title>
+<link rel="stylesheet" href="fonts/fonts.css">
+<link rel="stylesheet" href="style.css">
+<style>
+.top{display:flex;justify-content:center;margin-top:30px}
+.owner{
+  width:400px;text-align:center;padding:18px 22px;border-radius:13px;
+  background:linear-gradient(135deg,#0F6FC4,#0A4E92);
+  border:1px solid rgba(140,200,255,.45);box-shadow:0 12px 30px rgba(0,0,0,.42);
+}
+.owner .ttl{font-size:24px;font-weight:900;line-height:1.25}
+.owner .sub{font-size:13.5px;font-weight:600;color:#BFE0FA;margin-top:6px;line-height:1.5}
+.trunk{width:2px;height:24px;background:var(--line);margin:0 auto}
+/* 横線と縦線はカード列と同じグリッドで引く。
+   端の 1/10 ずつを空けると、線の両端が左右のカード中央でぴたりと止まる。 */
+.bar{
+  height:2px;background:var(--line);
+  margin:0 10%;
+}
+.legs{display:grid;grid-template-columns:repeat(5,1fr)}
+.leg{width:2px;height:22px;background:var(--line);margin:0 auto}
+
+.team{display:grid;grid-template-columns:repeat(5,1fr);gap:16px;margin-top:0}
+.role{
+  background:rgba(255,255,255,.05);border:1px solid rgba(140,200,255,.22);
+  border-top:4px solid var(--c);border-radius:12px;padding:16px 16px 18px;
+  display:flex;flex-direction:column;
+}
+.role .rname{font-size:19px;font-weight:900;line-height:1.3}
+.role .ren{font-size:11px;font-weight:700;letter-spacing:.11em;color:var(--c);margin-top:3px}
+.role .rdesc{font-size:13.5px;font-weight:500;color:#A9C4E2;line-height:1.6;margin-top:9px}
+.role ul{list-style:none;margin-top:11px;display:flex;flex-direction:column;gap:5px}
+.role li{font-size:12.8px;color:#C4D8EE;line-height:1.45;padding-left:13px;position:relative}
+.role li::before{content:'';position:absolute;left:0;top:7px;width:5px;height:5px;border-radius:50%;background:var(--c)}
+.role .stage{
+  margin-top:auto;padding-top:11px;font-size:11.5px;font-weight:700;color:#7D95B2;
+  border-top:1px solid rgba(140,200,255,.16);
+}
+.role .stage b{color:var(--c)}
+
+.matrix{margin-top:34px}
+.matrix h2{font-size:21px;font-weight:900;margin-bottom:6px}
+.matrix .note{font-size:14px;color:#8FA5C0;margin-bottom:13px}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{border:1px solid rgba(140,200,255,.20);padding:9px 8px;text-align:center}
+th{background:rgba(255,255,255,.06);font-weight:900;font-size:13.5px}
+th.stg{text-align:left;width:250px}
+td.stg{text-align:left;font-weight:700;color:#DCEAF8}
+td.stg small{display:block;font-weight:500;color:#7D95B2;font-size:12px;margin-top:2px}
+.R{color:#FFD873;font-weight:900}
+.A{color:#5FD2FF;font-weight:900}
+.C{color:#9FC0E0;font-weight:700}
+.dash{color:#44607F}
+.rkey{display:flex;gap:20px;margin-top:11px;font-size:13.5px;color:#9FC0E0;flex-wrap:wrap}
+.rkey span b{font-weight:900}
+</style></head>
+<body>
+<div class="board" id="board">
+  <div class="eyebrow">AMAZON PRODUCT VIDEO — ROLES</div>
+  <h1>役割分担図</h1>
+  <p class="lead">
+    制作フローの6工程を誰が持つか。1人でも回せる規模だが、分担する場合はこの切り方にすると引き継ぎの境界が工程とそろう。
+    <b>兼任は前提</b>で、小規模なら「ディレクター＋制作」の2人、最小構成なら1人＋Claude で成立する。
+  </p>
+
+  <div class="top">
+    <div class="owner">
+      <div class="ttl">プロデューサー / ディレクター</div>
+      <div class="sub">何を訴求するかを決める。最終責任者。<br>工程②の判断と、⑥の合否を持つ。</div>
+    </div>
+  </div>
+  <div class="trunk"></div>
+  <div class="bar"></div>
+  <div class="legs"><i class="leg"></i><i class="leg"></i><i class="leg"></i><i class="leg"></i><i class="leg"></i></div>
+
+  <div class="team">
+    <div class="role" style="--c:#38B6F0">
+      <div class="rname">リサーチ</div>
+      <div class="ren">RESEARCH</div>
+      <div class="rdesc">商品ページと競合を読み、購買障壁を言語化する。</div>
+      <ul>
+        <li>A+・比較表・レビューの分析</li>
+        <li>上位版と下位版の差の整理</li>
+        <li>実績数値の根拠と注記の確認</li>
+      </ul>
+      <div class="stage">担当工程　<b>① ②</b></div>
+    </div>
+
+    <div class="role" style="--c:#F5B21A">
+      <div class="rname">コピー</div>
+      <div class="ren">COPYWRITING</div>
+      <div class="rdesc">画面文字とナレーション原稿を書く。尺に収める責任も持つ。</div>
+      <ul>
+        <li>見出し・補足・注記の文言</li>
+        <li>ナレーション原稿と読み仮名</li>
+        <li>景表法・薬機法まわりの表現</li>
+      </ul>
+      <div class="stage">担当工程　<b>② ④</b></div>
+    </div>
+
+    <div class="role" style="--c:#24A05C">
+      <div class="rname">デザイン</div>
+      <div class="ren">DESIGN</div>
+      <div class="rdesc">画面のレイアウトと素材を作る。ミュートで成立するかを見る。</div>
+      <ul>
+        <li>シーン構成とレイアウト</li>
+        <li>スクリーンショットの切り出し</li>
+        <li>配色・タイポグラフィの統一</li>
+      </ul>
+      <div class="stage">担当工程　<b>② ③</b></div>
+    </div>
+
+    <div class="role" style="--c:#A96FA8">
+      <div class="rname">音声</div>
+      <div class="ren">AUDIO</div>
+      <div class="rdesc">ナレーションと環境音。尺と音量の基準を守る。</div>
+      <ul>
+        <li>ボイス選定と読み上げ速度</li>
+        <li>ラウドネス −16 LUFS の管理</li>
+        <li>セリフとシーンの同期</li>
+      </ul>
+      <div class="stage">担当工程　<b>④</b></div>
+    </div>
+
+    <div class="role" style="--c:#E23C2E">
+      <div class="rname">エンジニアリング</div>
+      <div class="ren">ENGINEERING</div>
+      <div class="rdesc">パイプラインを保守し、検品を自動で回す。</div>
+      <ul>
+        <li>取得・書き出し・検品スクリプト</li>
+        <li>入稿仕様の追従</li>
+        <li>検品項目の追加と基準値の管理</li>
+      </ul>
+      <div class="stage">担当工程　<b>① ⑤ ⑥</b></div>
+    </div>
+  </div>
+
+  <div class="matrix">
+    <h2>工程ごとの責任</h2>
+    <div class="note">1つの工程に実行責任者（R）は必ず1人。承認（A）はディレクターに寄せる。</div>
+    <table>
+      <tr>
+        <th class="stg">工程</th>
+        <th>ディレクター</th><th>リサーチ</th><th>コピー</th><th>デザイン</th><th>音声</th><th>エンジニア</th>
+      </tr>
+      <tr><td class="stg">① 調査<small>素材と情報を集める</small></td>
+        <td class="dash">–</td><td class="R">R</td><td class="dash">–</td><td class="C">C</td><td class="dash">–</td><td class="A">A</td></tr>
+      <tr><td class="stg">② 設計<small>構成と原稿を決める</small></td>
+        <td class="A">R / A</td><td class="C">C</td><td class="R">R</td><td class="R">R</td><td class="C">C</td><td class="dash">–</td></tr>
+      <tr><td class="stg">③ 文字<small>フォントのサブセット化</small></td>
+        <td class="dash">–</td><td class="dash">–</td><td class="dash">–</td><td class="R">R</td><td class="dash">–</td><td class="A">A</td></tr>
+      <tr><td class="stg">④ 音声<small>ナレーション合成</small></td>
+        <td class="C">C</td><td class="dash">–</td><td class="C">C</td><td class="dash">–</td><td class="R">R</td><td class="A">A</td></tr>
+      <tr><td class="stg">⑤ 映像<small>動画の書き出し</small></td>
+        <td class="dash">–</td><td class="dash">–</td><td class="dash">–</td><td class="C">C</td><td class="dash">–</td><td class="R">R</td></tr>
+      <tr><td class="stg">⑥ 検品<small>納品可否の判定</small></td>
+        <td class="A">A</td><td class="dash">–</td><td class="C">C</td><td class="C">C</td><td class="C">C</td><td class="R">R</td></tr>
+    </table>
+    <div class="rkey">
+      <span><b class="R">R</b> 実行する（手を動かす）</span>
+      <span><b class="A">A</b> 承認する（止める権限を持つ）</span>
+      <span><b class="C">C</b> 相談を受ける</span>
+      <span><b class="dash">–</b> 関与しない</span>
+    </div>
+  </div>
+
+  <div class="foot">
+    <b>最小構成</b>　1人＋Claude。①③④⑤⑥ はコマンドで流し、②の判断だけ人が持つ。1商品あたり半日ほど。<br>
+    <b>2人構成</b>　ディレクター（①②⑥）＋制作（②③④⑤）。コピーとデザインを制作側が兼ねる。<br>
+    <b>止める権限は分ける</b>　⑥の検品を実行するのはエンジニアだが、納品の可否はディレクターが持つ。機械が通しても、訴求が弱ければ②に戻す判断ができる状態にしておく。
+  </div>
+</div>
+</body></html>

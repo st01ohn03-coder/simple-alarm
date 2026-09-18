@@ -1,0 +1,45 @@
+/* 図版の共通スタイル。動画本編と同じ配色でそろえている。 */
+:root{
+  --navy:#061024; --navy2:#0B1C36; --line:#1E3A5F;
+  --blue:#0086CC; --blue-d:#0460B5; --blue-l:#38B6F0; --cyan:#5FD2FF;
+  --gold:#F5B21A; --gold-l:#FFD873; --red:#E23C2E; --green:#24A05C;
+  --orange:#F49807; --purple:#A96FA8;
+  --ink:#0B1220; --mute:#8FA5C0; --paper:#F7FAFD;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  font-family:'Noto Sans JP',sans-serif; font-feature-settings:'palt' 1;
+  -webkit-font-smoothing:antialiased; background:var(--navy);
+}
+.board{
+  position:relative; width:1600px; padding:56px 60px 48px;
+  background:
+    radial-gradient(120% 90% at 12% 0%, #17406F 0%, transparent 58%),
+    radial-gradient(110% 80% at 92% 100%, #0A2B55 0%, transparent 60%),
+    linear-gradient(165deg,#081729 0%, #050B16 100%);
+  color:#fff;
+}
+.eyebrow{
+  display:flex; align-items:center; gap:12px;
+  font-size:17px; font-weight:700; letter-spacing:.22em; color:var(--cyan);
+  margin-bottom:12px;
+}
+.eyebrow::before{content:'';width:30px;height:3px;border-radius:3px;background:var(--cyan)}
+h1{font-size:40px;font-weight:900;line-height:1.25;letter-spacing:.01em}
+.lead{font-size:17px;font-weight:500;color:#A9C4E2;margin-top:12px;line-height:1.65;max-width:1180px}
+.legend{display:flex;gap:22px;flex-wrap:wrap;margin-top:22px}
+.lg{display:flex;align-items:center;gap:9px;font-size:15px;font-weight:700;color:#C9DCF2}
+.sw{width:17px;height:17px;border-radius:5px;flex:0 0 auto}
+.sw.auto{background:var(--blue-l)}
+.sw.human{background:var(--gold)}
+.sw.gate{background:var(--red)}
+.foot{
+  margin-top:34px;padding-top:18px;border-top:1px solid var(--line);
+  font-size:14px;color:#7D95B2;line-height:1.7;
+}
+.foot b{color:#A9C4E2;font-weight:700}
+code{
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+  background:rgba(95,210,255,.10); border:1px solid rgba(95,210,255,.22);
+  border-radius:5px; padding:1px 7px; font-size:.92em; color:#BFE6FF;
+}

@@ -1,6 +1,6 @@
 /* Noto Sans JP (SIL Open Font License 1.1)
    ここで使う文字だけをサブセット化した woff2。
-   再生成: node tools/subset-fonts.js */
+   再生成: node tools/subset-fonts.js --diagrams */
 @font-face{
   font-family:'Noto Sans JP'; font-style:normal; font-weight:400;
   src:url('NotoSansJP-400.woff2') format('woff2'); font-display:block;
