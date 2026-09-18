@@ -1,0 +1,60 @@
+name: 商品動画の検品
+
+# 動画まわりを触った変更で、検品が通るかを自動で確かめる。
+# レイアウト・可読性・表記は書き出し前でも見られるので、
+# mp4 をコミットしていなくてもここまでは必ず走る。
+
+on:
+  push:
+    paths: ['amazon-video/**']
+  pull_request:
+    paths: ['amazon-video/**']
+  workflow_dispatch:
+
+jobs:
+  qa:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: amazon-video/ikinari-pdf-complete
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 依存関係を入れる
+        run: npm install --no-audit --no-fund
+
+      - name: Chromium を入れる
+        run: npx playwright install --with-deps chromium
+
+      - name: 環境を確認する
+        run: node tools/doctor.js
+
+      - name: 表記を点検する
+        run: node tools/lint-copy.js
+
+      - name: ルール自体が壊れていないか
+        run: node tools/lint-copy.js --selftest
+
+      - name: 設定どおりに生成されているか
+        # apply-config と subset-fonts の結果が
+        # コミット済みのものと食い違っていないかを見る。
+        run: |
+          node tools/apply-config.js
+          git diff --exit-code -- src/theme.css src/meta.json \
+            || { echo '::error::project.json と src/theme.css がずれています。node tools/apply-config.js を実行してコミットしてください。'; exit 1; }
+
+      - name: レイアウトと可読性を検品する
+        run: node tools/qa.js --skip-video
+
+      - name: 書き出し済みの動画も検品する
+        # mp4 をリポジトリに入れている場合だけ走る
+        run: |
+          if ls dist/*.mp4 >/dev/null 2>&1; then
+            node tools/qa.js
+          else
+            echo 'dist/ に mp4 が無いので、動画の検品は飛ばします。'
+          fi

@@ -2,6 +2,7 @@
 <html lang="ja"><head><meta charset="utf-8">
 <title>業務フロー図</title>
 <link rel="stylesheet" href="fonts/fonts.css">
+<link rel="stylesheet" href="../../src/theme.css">
 <link rel="stylesheet" href="style.css">
 <style>
 .flow{display:flex;flex-direction:column;gap:14px;margin-top:30px}
@@ -46,8 +47,8 @@
   <div class="eyebrow">AMAZON PRODUCT VIDEO — WORKFLOW</div>
   <h1>Amazon 商品動画 制作フロー</h1>
   <p class="lead">
-    ASIN を渡してから納品までの6工程。青は<b>コマンドで自動化済み</b>、金は<b>人が判断する工程</b>、赤は<b>通らないと先に進めない検品</b>。
-    1商品あたり、判断工程を除けば実行時間は5分ほど。
+    ASIN を渡してから納品までの6工程と、その前の環境確認。青は<b>コマンドで自動化済み</b>、金は<b>人が判断する工程</b>、赤は<b>通らないと先に進めない検品</b>。
+    1商品あたり、判断工程を除けば実行時間は5分ほど。設定はすべて <code>project.json</code> にある。
   </p>
   <div class="legend">
     <div class="lg"><span class="sw auto"></span>自動（コマンド1本）</div>
@@ -56,6 +57,17 @@
   </div>
 
   <div class="flow">
+    <div class="stage">
+      <div class="num"><b>0</b><span>環境</span></div>
+      <div class="body">
+        <h3>動く環境かを先に確かめる</h3>
+        <p>Node・Chromium・ffmpeg（libx264 と AAC まで）・Python・edge-tts・フォント・設定の妥当性を調べ、足りないものは直し方まで出す。別の環境に渡したらまずこれを走らせる。</p>
+        <div class="out"><b>落ちたら</b>　必須が1つでも欠けていれば終了コードが 0 にならない</div>
+      </div>
+      <div class="cmd"><code>tools/pipeline.sh doctor</code></div>
+    </div>
+    <div class="arrow">▼</div>
+
     <div class="stage">
       <div class="num"><b>1</b><span>調査</span></div>
       <div class="body">
@@ -72,11 +84,12 @@
       <div class="body">
         <h3>構成と原稿を決める</h3>
         <p>上位版と下位版の差、実績の根拠、レビューの傾向から、潰すべき購買障壁を決める。シーン構成・画面文字・ナレーション原稿・使う画像を確定させる。</p>
-        <div class="out"><b>触るもの</b>　src/video.html ／ src/assets/ ／ tools/narration.py の LINES ／ src/timeline.js の SCENES</div>
+        <div class="out"><b>触るもの</b>　BRIEF.md ／ src/video.html ／ src/assets/ ／ tools/narration.py の LINES ／ src/timeline.js の SCENES</div>
       </div>
       <div class="cmd">
         <div class="manual">人（または Claude）が判断</div>
         <code>python3 tools/narration.py --check</code>
+        <code>node tools/lint-copy.js</code>
       </div>
     </div>
     <div class="arrow">▼</div>
@@ -84,11 +97,11 @@
     <div class="stage">
       <div class="num"><b>3</b><span>文字</span></div>
       <div class="body">
-        <h3>フォントをサブセット化する</h3>
-        <p>画面に出る文字だけを Noto Sans JP から切り出す。ここを飛ばすと、新しく足した漢字が豆腐になる。</p>
-        <div class="out"><b>成果物</b>　src/fonts/*.woff2（4ウェイト・各60KB前後）</div>
+        <h3>設定を反映し、文字を切り出し、表記を点検する</h3>
+        <p>project.json の配色を theme.css に反映。画面に出る文字だけを Noto Sans JP から切り出す（飛ばすと新しい漢字が豆腐になる）。価格・URL・競合名など入稿できない表記がないかも見る。</p>
+        <div class="out"><b>成果物</b>　src/theme.css ／ src/fonts/*.woff2（4ウェイト・各60KB前後）</div>
       </div>
-      <div class="cmd"><code>node tools/subset-fonts.js</code></div>
+      <div class="cmd"><code>node tools/apply-config.js</code><code>node tools/subset-fonts.js</code><code>node tools/lint-copy.js</code></div>
     </div>
     <div class="arrow">▼</div>
 
@@ -118,7 +131,7 @@
       <div class="num"><b>6</b><span>検品</span></div>
       <div class="body">
         <h3>納品できる状態か機械で確かめる</h3>
-        <p>全シーンのレイアウトが余白に収まっているか（16:9・1:1 とも）、JSエラーがないか、解像度・コーデック・fps・音声トラック、ラウドネスとトゥルーピーク、映像と音声の尺ずれ。34項目。</p>
+        <p>入稿ルールに触れる表記、全シーンのレイアウト、文字の大きさ、背景とのコントラスト（文字を透明にした画で実測）、JSエラー、解像度・コーデック・fps・音声トラック・サイズ、ラウドネスとトゥルーピーク、映像と音声の尺ずれ。16:9 と 1:1 の両方で見る。</p>
         <div class="out"><b>落ちたら</b>　②へ戻る。1件でも外れると終了コードが 0 にならない</div>
       </div>
       <div class="cmd"><code>node tools/qa.js</code></div>
@@ -133,7 +146,8 @@
   <div class="foot">
     <b>自動化していない理由</b>　②の構成と原稿は、商品ごとに「何が購買障壁か」を読み解く工程で、機械的な変換では決まらない。
     ここだけは人（または Claude）が判断し、残りはすべてコマンドに寄せている。<br>
-    <b>価格は動画に入れない</b>　Amazon の商品動画ガイドラインで価格・割引表記は認められていない。買い切りの訴求は支払い回数の比較に置き換える。詳しくは docs/ANALYSIS.md 第4章。
+    <b>価格は動画に入れない</b>　Amazon の商品動画ガイドラインで価格・割引表記は認められていない。買い切りの訴求は支払い回数の比較に置き換える。詳しくは docs/ANALYSIS.md 第4章。<br>
+    <b>別の商品で始める</b>　<code>tools/pipeline.sh new &lt;ASIN&gt; ../my-product</code> でエンジンを複製し、商品ページから素材を集め、判断用の BRIEF.md を事実入りで生成する。詳しくは docs/PLAYBOOK.md。
   </div>
 </div>
 </body></html>

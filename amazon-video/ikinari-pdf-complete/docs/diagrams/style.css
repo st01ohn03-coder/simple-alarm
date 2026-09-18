@@ -1,11 +1,4 @@
-/* 図版の共通スタイル。動画本編と同じ配色でそろえている。 */
-:root{
-  --navy:#061024; --navy2:#0B1C36; --line:#1E3A5F;
-  --blue:#0086CC; --blue-d:#0460B5; --blue-l:#38B6F0; --cyan:#5FD2FF;
-  --gold:#F5B21A; --gold-l:#FFD873; --red:#E23C2E; --green:#24A05C;
-  --orange:#F49807; --purple:#A96FA8;
-  --ink:#0B1220; --mute:#8FA5C0; --paper:#F7FAFD;
-}
+/* 図版の共通スタイル。配色は src/theme.css（project.json から生成）を使う。 */
 *{margin:0;padding:0;box-sizing:border-box}
 body{
   font-family:'Noto Sans JP',sans-serif; font-feature-settings:'palt' 1;

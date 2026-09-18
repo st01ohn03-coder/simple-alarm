@@ -14,9 +14,10 @@ Amazon の ASIN を渡してから動画を納品するまでの手順。
 
 | 工程 | 内容 | 自動 | 実行時間 |
 |---|---|:--:|---|
+| ⓪ 環境 | 必要なものが揃っているか確かめる | ○ | 5秒 |
 | ① 調査 | 商品ページから素材と情報を集める | ○ | 30秒 |
 | ② 設計 | 構成と原稿を決める | **人が判断** | 2〜4時間 |
-| ③ 文字 | フォントをサブセット化する | ○ | 10秒 |
+| ③ 準備 | 設定を反映し、文字を切り出し、表記を点検する | ○ | 15秒 |
 | ④ 音声 | ナレーションを合成する | ○ | 2分 |
 | ⑤ 映像 | 動画を書き出す（16:9 と 1:1） | ○ | 100秒 |
 | ⑥ 検品 | 納品できる状態か機械で確かめる | ○ | 40秒 |
@@ -24,10 +25,25 @@ Amazon の ASIN を渡してから動画を納品するまでの手順。
 ②を除けば実行時間は5分ほど。時間を使うのは②だけで、ここが品質を決める。
 
 ```bash
-tools/pipeline.sh all B0FVFTZSM7     # ①を実行し、②の指示を出して止まる
+tools/pipeline.sh all B0FVFTZSM7     # ⓪①を実行し、②の指示を出して止まる
 # ② を終えたら
 tools/pipeline.sh build && tools/pipeline.sh qa
 ```
+
+別の人に渡すとき、別の商品で始めるときに何が要るかは
+[`PLAYBOOK.md`](PLAYBOOK.md) にまとめてある。
+
+---
+
+## ⓪ 環境
+
+```bash
+tools/pipeline.sh doctor
+```
+
+Node・Chromium・ffmpeg（libx264 と AAC の有無まで）・Python・edge-tts・フォント・
+`project.json` の妥当性を調べ、足りないものは直し方まで出す。
+必須が1つでも欠けると終了コードが 0 にならないので、CI に置いてもそのまま使える。
 
 ---
 
@@ -120,14 +136,16 @@ tools/pipeline.sh fetch B0FVFTZSM7
 
 ---
 
-## ③ 文字
+## ③ 準備
 
 ```bash
-node tools/subset-fonts.js
+node tools/apply-config.js   # project.json の配色を src/theme.css に反映
+node tools/subset-fonts.js   # 画面に出る文字だけを切り出す
+node tools/lint-copy.js      # 入稿できない表記がないか
 ```
 
-画面に出る文字だけを Noto Sans JP から切り出して `src/fonts/` に置く。
-**②で新しい漢字を足したら必ず実行する。** 飛ばすとその字が豆腐になる。
+**②で新しい漢字を足したら `subset-fonts.js` を必ず実行する。** 飛ばすとその字が豆腐になる。
+`lint-copy.js` は価格・URL・競合名・根拠なしの最上級などを拾う。
 
 図版用は別サブセット。
 
@@ -174,20 +192,25 @@ node tools/qa.js --skip-video    # 書き出し前にレイアウトだけ見る
 
 | 見るもの | 基準 |
 |---|---|
+| 表記 | 入稿できない文言が無いこと（`tools/lint-copy.js`） |
 | レイアウト | 全シーンの中身が余白の内側（16:9・1:1 とも）。画面外にはみ出していないこと |
+| 文字の大きさ | キャンバス高さの `qa.minFontPctH`% 以上。注記だけ `qa.minSmallFontPctH`% |
+| コントラスト | `qa.minContrast`:1 以上。大きな文字は `qa.minContrastLarge`:1 |
 | ページ | `video.html` に JS エラーが出ていないこと |
 | 動画仕様 | 720p 以上／H.264・yuv420p／23.976fps 以上／音声トラックあり |
 | ラウドネス | -17〜-15 LUFS |
 | トゥルーピーク | -1.0 dBFS 以下 |
 | 整合 | 動画の尺が `timeline.js` の `DUR` と一致。映像と音声の尺差 0.15 秒以内 |
 
-基準値は `tools/qa.js` の `LIMITS` にまとまっている。入稿先が変わったらここを直す。
+基準値は `project.json` の `qa` にまとまっている。入稿先が変わったらここを直す。
 
 **落ちたときの読み方**
 
 | 落ちた項目 | だいたいの原因 |
 |---|---|
+| 表記 | ②で価格や URL を書いてしまった。`node tools/lint-copy.js` に理由と直し方が出る |
 | レイアウト | ②で文言を足してはみ出した。文字を減らすかフォントサイズを下げる |
+| コントラスト | 明るい背景に淡い文字を乗せた。`project.json` の色を直して `apply-config.js` |
 | 整合（尺） | `timeline.js` を変えたあと書き出し直していない |
 | 整合（映像と音声） | ナレーションを作り直していない。`python3 tools/narration.py` |
 | ラウドネス | 音声を手で加工した。`tools/narration.py` から作り直す |

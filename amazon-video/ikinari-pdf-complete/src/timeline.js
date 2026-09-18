@@ -360,8 +360,12 @@
 
   /* ---------- キャンバスに合わせて rem を決める ---------- */
   function fit() {
-    // 1rem = キャンバス幅の 1% → 16:9 も 1:1 も同じ比率レイアウト
-    document.documentElement.style.fontSize = (window.innerWidth / 100) + 'px';
+    // 1rem はキャンバス幅の 1% が基準。
+    // ただし正方形や縦型は幅が狭いぶん、幅だけで決めると画面の高さに対して
+    // 文字が小さくなりすぎる。縦長になるほど基準を上げて読みやすさをそろえる。
+    var aspect = window.innerWidth / window.innerHeight;
+    var scale = aspect >= 1.5 ? 1.0 : (aspect >= 0.9 ? 1.25 : 1.55);
+    document.documentElement.style.fontSize = (window.innerWidth / 100 * scale) + 'px';
     // 1:1 用のレイアウト切り替え
     var square = (window.innerHeight / window.innerWidth) > 0.9;
     document.body.classList.toggle('square', square);

@@ -4,13 +4,20 @@
   "private": true,
   "description": "いきなりPDF Ver.13 COMPLETE — Amazon 商品動画のレンダリング",
   "scripts": {
+    "doctor": "node tools/doctor.js",
+    "lint": "node tools/lint-copy.js",
+    "config": "node tools/apply-config.js",
+    "fonts": "node tools/subset-fonts.js",
+    "narration": "python3 tools/narration.py",
     "render": "node tools/render.js --preset 16x9",
     "render:square": "node tools/render.js --preset 1x1",
-    "render:all": "node tools/render.js --preset 16x9 && node tools/render.js --preset 1x1",
-    "preview": "node -e \"console.log('src/video.html をブラウザで開いてください')\""
+    "build": "tools/pipeline.sh build",
+    "qa": "node tools/qa.js",
+    "diagrams": "node tools/render-diagrams.js"
   },
   "dependencies": {
     "@ffmpeg-installer/ffmpeg": "^1.1.0",
-    "playwright": "^1.40.0"
+    "playwright": "^1.40.0",
+    "pngjs": "^7.0.0"
   }
 }

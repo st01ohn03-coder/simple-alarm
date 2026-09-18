@@ -5,24 +5,8 @@
    16:9 / 1:1 の両方で同じ比率のレイアウトになる。
    ============================================================ */
 
-:root{
-  --navy:    #061024;
-  --navy2:   #0B1C36;
-  --navy3:   #12294B;
-  --blue:    #0086CC;
-  --blue-d:  #0460B5;
-  --blue-l:  #38B6F0;
-  --cyan:    #5FD2FF;
-  --gold:    #F5B21A;
-  --gold-l:  #FFD873;
-  --red:     #E23C2E;
-  --green:   #24A05C;
-  --orange:  #F49807;
-  --purple:  #A96FA8;
-  --ink:     #0B1220;
-  --paper:   #F4F7FB;
-  --mute:    #8FA5C0;
-}
+/* 配色は theme.css（project.json から生成）で定義している。 */
+
 
 *{ margin:0; padding:0; box-sizing:border-box; }
 
@@ -51,7 +35,7 @@ html,body{
   opacity:0; will-change:opacity, transform;
   padding:5rem 7rem 7.5rem;
 }
-.scene.sq{ padding:6rem 6rem 10rem; }
+.scene.sq{ padding:4.5rem 5rem 8rem; }
 
 /* シーン直下のコンテンツは必ず背景より前面に置く。
    .bg は position:absolute なので、z-index を指定しないと
@@ -70,9 +54,11 @@ html,body{
     linear-gradient(165deg, #081729 0%, #050B16 100%);
 }
 .bg-grad-blue{
+  /* 明るすぎると白系の文字が読めなくなる（検品のコントラストで落ちる）。
+     一番明るい部分でも 4.5:1 が出る濃さにしてある。 */
   background:
-    radial-gradient(120% 100% at 80% 10%, #2AA6E8 0%, transparent 58%),
-    linear-gradient(150deg, #0A63B8 0%, #05306B 100%);
+    radial-gradient(120% 100% at 80% 10%, #14649F 0%, transparent 58%),
+    linear-gradient(150deg, #084B86 0%, #032546 100%);
 }
 .bg-paper{ background:linear-gradient(170deg,#FFFFFF 0%, #E9F1FA 100%); }
 
@@ -111,9 +97,16 @@ h1.headline{
   letter-spacing:.005em; color:#fff; text-align:center;
 }
 h2.headline{
-  font-size:5.2rem; font-weight:900; line-height:1.2;
+  /* 各シーンは style="--fs:..." で大きさを指定する。
+     インラインの font-size にすると正方形版で上書きできないため。 */
+  font-size:var(--fs, 5.2rem); font-weight:900; line-height:1.2;
   color:#fff; text-align:center; letter-spacing:.01em;
 }
+/* 正方形は幅が狭く縦に積むぶん、見出しと余白を詰める */
+.scene.sq h2.headline{ font-size:calc(var(--fs, 5.2rem) * 0.80); }
+.scene.sq .prodname{ font-size:6.2rem; }
+.scene.sq .sub{ font-size:2.1rem; margin-top:1.4rem; }
+.scene.sq .eyebrow{ font-size:1.85rem; margin-bottom:1.3rem; }
 h2.headline.on-light{ color:var(--ink); }
 .headline .hl{ color:var(--gold-l); }
 .headline .hl-b{ color:var(--cyan); }
@@ -163,14 +156,14 @@ h2.headline.on-light{ color:var(--ink); }
 .reveal-txt{ display:flex; flex-direction:column; align-items:flex-start; }
 .reveal.sq .reveal-txt{ align-items:center; }
 .brandline{
-  font-size:2.3rem; font-weight:700; letter-spacing:.2em; color:var(--cyan);
+  font-size:2.3rem; font-weight:700; letter-spacing:.2em; color:var(--on-blue);
   margin-bottom:1.2rem;
 }
 .prodname{
   font-size:7.4rem; font-weight:900; line-height:1.02; color:#fff;
   letter-spacing:-.01em;
 }
-.prodname .ver{ font-size:4.4rem; font-weight:700; vertical-align:.5rem; margin-left:1rem; color:var(--cyan); }
+.prodname .ver{ font-size:4.4rem; font-weight:700; vertical-align:.5rem; margin-left:1rem; color:var(--on-blue); }
 .edition{
   margin-top:1.2rem; padding:.8rem 2.4rem; border-radius:.7rem;
   background:linear-gradient(90deg,#000 0%, #12294B 100%);
@@ -202,7 +195,7 @@ h2.headline.on-light{ color:var(--ink); }
   display:grid; grid-template-columns:repeat(4,1fr); gap:2rem;
   width:100%; max-width:106rem; margin-top:2.8rem;
 }
-.fgrid.sq{ grid-template-columns:repeat(2,1fr); gap:2.4rem; max-width:82rem; }
+.fgrid.sq{ grid-template-columns:repeat(2,1fr); gap:1.5rem; max-width:82rem; }
 .fcard{
   background:rgba(255,255,255,.055);
   border:.16rem solid rgba(140,200,255,.24);
@@ -214,21 +207,21 @@ h2.headline.on-light{ color:var(--ink); }
   width:100%; height:11.2rem; object-fit:cover; object-position:center top;
   background:#fff; border-bottom:.16rem solid rgba(140,200,255,.24);
 }
-.fgrid.sq .fcard .shot{ height:15rem; }
+.fgrid.sq .fcard .shot{ height:10.5rem; }
 .convertviz{
   display:flex; align-items:center; justify-content:center; gap:1.4rem;
   background:linear-gradient(160deg,#EDF8F1,#DCEFE4);
 }
 .cv-doc{
-  width:4.8rem; height:6rem; border-radius:.45rem; background:#fff;
+  width:5.2rem; height:6.4rem; border-radius:.45rem; background:#fff;
   border:.18rem solid #BFD4C7; box-shadow:0 .3rem .8rem rgba(0,0,0,.12);
   display:flex; align-items:center; justify-content:center;
-  font-size:1.35rem; font-weight:900; color:#D2352B; letter-spacing:.02em;
+  font-size:1.5rem; font-weight:900; color:#B32B22; letter-spacing:.02em;
 }
 .cv-arrow{ color:#24A05C; font-size:2.4rem; font-weight:900; line-height:1; }
 .cv-out{ display:flex; flex-direction:column; gap:.5rem; }
 .cv-chip{
-  font-size:1.22rem; font-weight:800; color:#fff;
+  font-size:1.45rem; font-weight:800; color:#fff;
   padding:.34rem .85rem; border-radius:.32rem; text-align:center; letter-spacing:.02em;
 }
 
@@ -239,7 +232,7 @@ h2.headline.on-light{ color:var(--ink); }
   font-size:1.75rem; font-weight:900; color:#fff; margin-bottom:.9rem;
 }
 .fcard h3{ font-size:2.38rem; font-weight:900; color:#fff; line-height:1.24; }
-.fcard p{ font-size:1.68rem; font-weight:500; color:#A9C4E2; line-height:1.48; margin-top:.6rem; }
+.fcard p{ font-size:1.78rem; font-weight:500; color:var(--body-dim); line-height:1.48; margin-top:.6rem; }
 
 /* ---------- 左右2カラム（S4） ---------- */
 .splitwrap{
@@ -291,7 +284,7 @@ h2.headline.on-light{ color:var(--ink); }
 
 /* ---------- S5: セキュリティ 4アイコン ---------- */
 .secrow{ display:flex; gap:2rem; margin-top:2.6rem; width:100%; max-width:100rem; }
-.secrow.sq{ flex-wrap:wrap; max-width:76rem; }
+.secrow.sq{ flex-wrap:wrap; max-width:76rem; gap:1.5rem; }
 .seccard{
   flex:1; min-width:0; padding:2.1rem 1.6rem;
   background:rgba(255,255,255,.055); border-radius:1.4rem;
@@ -302,7 +295,7 @@ h2.headline.on-light{ color:var(--ink); }
 .secrow.sq .seccard{ flex:0 0 calc(50% - 1.1rem); }
 .seccard .icn{ width:5.6rem; height:5.6rem; margin-bottom:1.1rem; }
 .seccard h4{ font-size:2.25rem; font-weight:900; color:#fff; line-height:1.24; }
-.seccard p{ font-size:1.62rem; font-weight:500; color:#A9C4E2; margin-top:.6rem; line-height:1.45; }
+.seccard p{ font-size:1.62rem; font-weight:500; color:var(--body-dim); margin-top:.6rem; line-height:1.45; }
 
 /* ---------- S6: AI 3ステップ ---------- */
 .newbadge{
@@ -313,7 +306,7 @@ h2.headline.on-light{ color:var(--ink); }
   margin-bottom:1.7rem; will-change:transform,opacity;
 }
 .steps{ display:flex; align-items:stretch; gap:1.5rem; margin-top:2.6rem; width:100%; max-width:102rem; }
-.steps.sq{ flex-direction:column; max-width:74rem; gap:1.3rem; }
+.steps.sq{ flex-direction:column; max-width:74rem; gap:1.1rem; }
 .step{
   flex:1; padding:2.2rem 1.8rem; border-radius:1.4rem;
   background:rgba(255,255,255,.055); border:.16rem solid rgba(140,200,255,.24);
@@ -330,7 +323,7 @@ h2.headline.on-light{ color:var(--ink); }
 }
 .steps.sq .step .sn{ margin-bottom:0; }
 .step h4{ font-size:2.3rem; font-weight:900; color:#fff; line-height:1.26; }
-.step p{ font-size:1.66rem; font-weight:500; color:#A9C4E2; margin-top:.7rem; line-height:1.5; }
+.step p{ font-size:1.66rem; font-weight:500; color:var(--body-dim); margin-top:.7rem; line-height:1.5; }
 .arrowdot{ display:flex; align-items:center; color:var(--cyan); font-size:3.2rem; font-weight:900; }
 .steps.sq .arrowdot{ display:none; }
 
@@ -348,12 +341,12 @@ h2.headline.on-light{ color:var(--ink); }
   font-size:1.72rem; font-weight:700; color:#fff;
   will-change:transform,opacity;
 }
-.bar.yearly{ background:linear-gradient(90deg,#9AA3B4,#7C8697); }
+.bar.yearly{ background:linear-gradient(90deg,#6E7683,#5E6675); }
 .bar.yearly.last{ background:linear-gradient(90deg,#E2483A,#C42B1E); }
-.bar.once{ background:linear-gradient(90deg,var(--blue-l),var(--blue-d)); }
+.bar.once{ background:linear-gradient(90deg,#1F7FAE,var(--blue-d)); }
 .costlabel{ margin-top:1.5rem; text-align:center; }
 .costlabel .cl1{ font-size:2.45rem; font-weight:900; color:#fff; line-height:1.2; }
-.costlabel .cl2{ font-size:1.78rem; font-weight:600; color:#A9C4E2; margin-top:.5rem; }
+.costlabel .cl2{ font-size:1.78rem; font-weight:600; color:var(--body-dim); margin-top:.5rem; }
 .costlabel .cl1.win{ color:var(--cyan); }
 .vs{
   align-self:center; margin-bottom:8rem;
@@ -362,7 +355,7 @@ h2.headline.on-light{ color:var(--ink); }
 
 /* ---------- S8: クロージング ---------- */
 .proofrow{ display:flex; gap:2.2rem; margin-top:1.8rem; width:100%; max-width:92rem; }
-.proofrow.sq{ flex-direction:column; gap:1.4rem; max-width:70rem; }
+.proofrow.sq{ flex-direction:column; gap:1.1rem; max-width:70rem; }
 .proof{
   flex:1; padding:1.9rem 1.4rem; border-radius:1.4rem;
   background:rgba(255,255,255,.08); border:.16rem solid rgba(255,255,255,.22);

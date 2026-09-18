@@ -14,6 +14,7 @@ ASIN **B0FVFTZSM7** 向けの商品動画。HTML/CSS/JS でアニメーション
 
 出力先: `dist/`
 
+- [`docs/PLAYBOOK.md`](docs/PLAYBOOK.md) — **別の人・別の商品で同じ品質を出すために何が要るか**
 - [`docs/WORKFLOW.md`](docs/WORKFLOW.md) — 制作フロー。他の商品で回すときの手順もここ
 - [`docs/ANALYSIS.md`](docs/ANALYSIS.md) — 商品ページ・A+ の分析と、動画構成の根拠
 - [`docs/SCRIPT.md`](docs/SCRIPT.md) — 絵コンテ・台本・ナレーション原稿
@@ -22,15 +23,19 @@ ASIN **B0FVFTZSM7** 向けの商品動画。HTML/CSS/JS でアニメーション
 
 ---
 
-## 作り直す
+## 動かす
 
 ```bash
-npm install            # playwright と ffmpeg を入れる
-pip install edge-tts   # 音声合成
+npm install                # playwright と ffmpeg を入れる
+pip install edge-tts       # 音声合成
 
-tools/pipeline.sh build   # フォント → ナレーション → 映像
-tools/pipeline.sh qa      # 検品（34項目）
+tools/pipeline.sh doctor   # 必要なものが揃っているか（足りなければ直し方が出る）
+tools/pipeline.sh build    # 設定反映 → 文字 → 表記点検 → ナレーション → 映像
+tools/pipeline.sh qa       # 検品
 ```
+
+`doctor` は Node・Chromium・ffmpeg（libx264 と AAC の有無まで）・Python・edge-tts・
+フォント・設定の妥当性を調べる。必須が1つでも欠けると終了コードが 0 にならない。
 
 個別に叩くなら次のとおり。
 
@@ -48,18 +53,37 @@ node tools/qa.js                       # 検品
 ## 別の商品で作る
 
 ```bash
-tools/pipeline.sh all B0XXXXXXXX
+tools/pipeline.sh new B0XXXXXXXX ../my-product
 ```
 
-商品ページから素材と情報を集めたあと、構成と原稿を決める工程で一度止まる。
-そこだけは人（または Claude）の判断が要る。手順は [`docs/WORKFLOW.md`](docs/WORKFLOW.md) にある。
+エンジン一式・図版・ドキュメントを複製し、`project.json` の ASIN と slug を差し替え、
+商品ページから素材を集め、判断用の `BRIEF.md` を事実入りで生成する。
+前の商品の画像・書き出し・根拠つき主張は引き継がない。
 
 | コマンド | 内容 |
 |---|---|
+| `tools/pipeline.sh doctor` | 動く環境か確かめる |
 | `tools/pipeline.sh fetch <ASIN>` | 商品ページから素材と情報を集める |
-| `tools/pipeline.sh build` | フォント・ナレーション・映像 |
+| `tools/pipeline.sh build` | 設定反映・文字・表記点検・ナレーション・映像 |
 | `tools/pipeline.sh qa` | 検品 |
-| `tools/pipeline.sh all <ASIN>` | fetch してから、設計工程の指示を出して止まる |
+| `tools/pipeline.sh new <ASIN> <dir>` | 別の商品のプロジェクトを作る |
+| `tools/pipeline.sh all <ASIN>` | 環境確認と調査を済ませ、設計工程の指示を出して止まる |
+
+## 設定
+
+配色・尺・声・検品の基準は [`project.json`](project.json) にまとまっている。
+ツールはすべてここを読むので、書き換える場所を探す必要がない。
+矛盾した設定（たとえばナレーションの目標音量が検品の基準の外）は、書き出す前に止まる。
+
+```
+project.json
+├── product      ASIN・商品名・slug（書き出しファイル名になる）
+├── theme        配色とフォント → node tools/apply-config.js で src/theme.css に反映
+├── video        fps・画質・プリセット・納品するもの
+├── narration    声・速度・音量・環境音
+├── qa           検品の基準値
+└── compliance   使うルールと、根拠を示した主張
+```
 
 その他のオプション:
 
@@ -89,7 +113,8 @@ node tools/render.js --audio none               # ナレーションを入れず
 | 色・文字サイズ・レイアウト | `src/styles.css` |
 | 製品画面・パッケージ画像 | `src/assets/*.jpg` |
 | ナレーション原稿・声・速度 | `tools/narration.py` |
-| 検品の基準値 | `tools/qa.js` の `LIMITS` |
+| 配色・尺・声・検品の基準 | `project.json` |
+| 入稿できない表記のルール | `docs/compliance/*.json` |
 | フロー図・役割分担図 | `docs/diagrams/*.html` |
 
 `src/video.html` をそのままブラウザで開くとループ再生でプレビューできる。
@@ -170,6 +195,17 @@ python3 tools/narration.py --music-db -24       # 環境音をもっと下げる
   ので、ナレーションは補助。音声を外しても情報は欠けない。
 - フォントは Noto Sans JP（SIL Open Font License 1.1）。使用文字だけをサブセット化して `src/fonts/` に同梱している。
   文言に新しい漢字を足したときは、サブセットを作り直さないと豆腐になる。
+
+### 表記を点検する
+
+```bash
+node tools/lint-copy.js            # 価格・URL・競合名・根拠なしの最上級など
+node tools/lint-copy.js --strict   # 要確認も失格にする
+node tools/lint-copy.js --selftest # ルール自体が壊れていないか
+```
+
+ルールは `docs/compliance/<profile>.json`。各ルールに「拾うべき例」と
+「拾ってはいけない例」を書いてあるので、正規表現を直しても自己診断で気づける。
 
 ### フォントのサブセットを作り直す
 

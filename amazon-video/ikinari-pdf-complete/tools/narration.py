@@ -8,6 +8,9 @@
   python3 tools/narration.py --voice ja-JP-KeitaNeural   # 男性ボイス
   python3 tools/narration.py --no-music # 環境音ベッドを入れない
 
+声・速度・音量の既定値は project.json の narration。
+コマンド引数はそれを一時的に上書きする。
+
 各セリフは src/timeline.js の SCENES と同じ区間に割り当ててある。
 セリフがシーンの終わりをはみ出す場合は警告を出す。
 """
@@ -19,10 +22,32 @@ BUILD = ROOT / "build" / "narration"
 TIMELINE = ROOT / "src" / "timeline.js"
 SR = 48000
 
-LEAD = 0.45          # シーンが始まってから読み始めるまでの間
-TAIL_MARGIN = 0.30   # シーンが終わる何秒前までに読み終えるか
-CLIP_LUFS = -19.0    # 各セリフをそろえるラウドネス
-TARGET_LUFS = -16.0  # 完成トラックのラウドネス
+def load_project():
+    """project.json を読む。無ければ既定値で動く。Node 側の tools/config.js と同じ値。"""
+    f = ROOT / "project.json"
+    d = {"voice": "ja-JP-NanamiNeural", "rate": "+6%", "lead": 0.45, "tailMargin": 0.30,
+         "clipLufs": -19.0, "targetLufs": -16.0, "music": {"enabled": True, "db": -19.0}}
+    if not f.exists():
+        return d
+    try:
+        n = json.loads(f.read_text(encoding="utf-8")).get("narration", {})
+    except Exception as e:
+        sys.exit(f"project.json を読めません: {e}")
+    for k, v in n.items():
+        if k.startswith("_"):
+            continue
+        if k == "music" and isinstance(v, dict):
+            d["music"].update({mk: mv for mk, mv in v.items() if not mk.startswith("_")})
+        else:
+            d[k] = v
+    return d
+
+
+NAR = load_project()
+LEAD = float(NAR["lead"])                 # シーンが始まってから読み始めるまでの間
+TAIL_MARGIN = float(NAR["tailMargin"])    # シーンが終わる何秒前までに読み終えるか
+CLIP_LUFS = float(NAR["clipLufs"])        # 各セリフをそろえるラウドネス
+TARGET_LUFS = float(NAR["targetLufs"])    # 完成トラックのラウドネス
 
 
 def read_timeline():
@@ -202,12 +227,13 @@ def make_music(path: Path):
 def main():
     global FF
     ap = argparse.ArgumentParser()
-    ap.add_argument("--voice", default="ja-JP-NanamiNeural")
-    ap.add_argument("--rate", default="+6%", help="読み上げ速度。例 +8%")
+    ap.add_argument("--voice", default=NAR["voice"])
+    ap.add_argument("--rate", default=NAR["rate"], help="読み上げ速度。例 +8%")
     ap.add_argument("--out", default="dist/narration.m4a")
     ap.add_argument("--check", action="store_true", help="尺の確認だけして書き出さない")
-    ap.add_argument("--no-music", action="store_true", help="環境音ベッドを入れない")
-    ap.add_argument("--music-db", type=float, default=-19.0, help="環境音の音量(dB)")
+    ap.add_argument("--no-music", action="store_true", default=not NAR["music"].get("enabled", True),
+                    help="環境音ベッドを入れない")
+    ap.add_argument("--music-db", type=float, default=float(NAR["music"]["db"]), help="環境音の音量(dB)")
     args = ap.parse_args()
     FF = ffmpeg()
 

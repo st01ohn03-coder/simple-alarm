@@ -10,6 +10,9 @@
      node tools/render.js --w 1280 --h 720 --fps 30 --out dist/foo.mp4
      node tools/render.js --audio none    # ナレーションを入れず無音にする
 
+   解像度・fps・画質・書き出し名は project.json（video.presets ほか）が既定値。
+   コマンド引数はそれを一時的に上書きする。
+
    音声は既定で dist/narration.m4a を多重化する。無ければ無音トラックになる。
    音声の作り方は tools/narration.py を参照。
    ============================================================ */
@@ -19,50 +22,36 @@ const path = require('path');
 const fs = require('fs');
 const { spawn } = require('child_process');
 const { chromium } = require('playwright');
+const { ROOT, load, outputName, ffmpegPath, launchOptions } = require('./config.js');
+
+const cfg = load();
 
 /* ---------- 引数 ---------- */
 function arg(name, def) {
   const i = process.argv.indexOf('--' + name);
   return i > -1 && process.argv[i + 1] ? process.argv[i + 1] : def;
 }
-const PRESETS = {
-  '16x9': { w: 1920, h: 1080, out: 'ikinari-pdf-complete_16x9_1080p.mp4' },
-  '1x1':  { w: 1080, h: 1080, out: 'ikinari-pdf-complete_1x1_1080.mp4' },
-  '9x16': { w: 1080, h: 1920, out: 'ikinari-pdf-complete_9x16_1080.mp4' }
-};
-const preset = PRESETS[arg('preset', '16x9')] || PRESETS['16x9'];
+const presetKey = arg('preset', '16x9');
+const preset = cfg.video.presets[presetKey];
+if (!preset) {
+  console.error(`知らないプリセットです: ${presetKey}`);
+  console.error(`使えるのは ${Object.keys(cfg.video.presets).join(', ')}（project.json の video.presets）`);
+  process.exit(1);
+}
 
-const ROOT = path.resolve(__dirname, '..');
 const W    = parseInt(arg('w', preset.w), 10);
 const H    = parseInt(arg('h', preset.h), 10);
-const FPS  = parseInt(arg('fps', '30'), 10);
-const CRF  = arg('crf', '18');
-const QUAL = parseInt(arg('quality', '96'), 10);
+const FPS  = parseInt(arg('fps', cfg.video.fps), 10);
+const CRF  = String(arg('crf', cfg.video.crf));
+const QUAL = parseInt(arg('quality', cfg.video.jpegQuality), 10);
 const AUDIO = arg('audio', path.join('dist', 'narration.m4a'));
-const OUT  = path.resolve(ROOT, arg('out', path.join('dist', preset.out)));
+const OUT  = path.resolve(ROOT, arg('out', path.join('dist', outputName(cfg, presetKey))));
 const PAGE = 'file://' + path.join(ROOT, 'src', 'video.html');
-
-/* ---------- 実行ファイルの場所 ---------- */
-function ffmpegPath() {
-  if (process.env.FFMPEG_PATH) return process.env.FFMPEG_PATH;
-  try { return require('@ffmpeg-installer/ffmpeg').path; } catch (e) {}
-  return 'ffmpeg';
-}
-function chromePath() {
-  if (process.env.CHROMIUM_PATH) return process.env.CHROMIUM_PATH;
-  const p = '/opt/pw-browsers/chromium';
-  return fs.existsSync(p) ? p : undefined;
-}
 
 (async () => {
   fs.mkdirSync(path.dirname(OUT), { recursive: true });
 
-  const launchOpts = { args: ['--no-sandbox', '--disable-dev-shm-usage', '--force-color-profile=srgb',
-                              '--font-render-hinting=none', '--disable-lcd-text'] };
-  const exe = chromePath();
-  if (exe) launchOpts.executablePath = exe;
-
-  const browser = await chromium.launch(launchOpts);
+  const browser = await chromium.launch(launchOptions());
   const ctx = await browser.newContext({
     viewport: { width: W, height: H },
     deviceScaleFactor: 1,
