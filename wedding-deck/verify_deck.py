@@ -21,8 +21,8 @@ NS = {
     "a": "http://schemas.openxmlformats.org/drawingml/2006/main",
     "p": "http://schemas.openxmlformats.org/presentationml/2006/main",
 }
-PANEL_LX, PANEL_RX = 1150000, 6792000
-PH_X, PH_Y1, PH_Y2 = 4100000, 2000000, 3650000
+PANEL_LX, PANEL_RX, PANEL_Y = 1150000, 6792000, 3300000
+P4_LX, P4_RX, P4_Y = 1150000, 6392000, 1880000
 PAD = 110000
 FIRST_QUIZ_SLIDE = 6          # 表紙1 + ルール3 + セクション扉1 の次
 
@@ -65,10 +65,10 @@ def check(path):
             if clr is not None and clr.get("val") == "FF0000":
                 off = sp.find(".//a:off", NS)
                 frames.append((int(off.get("x")), int(off.get("y"))))
-        if q.get("layout") == "photo":
-            want = (PH_X - PAD, (PH_Y1 if q["answer"] == "maru" else PH_Y2) - PAD)
+        if q.get("layout") == "photo4":
+            want = ((P4_LX if q["answer"] == "maru" else P4_RX) - PAD, P4_Y - PAD)
         else:
-            want = ((PANEL_LX if q["answer"] == "maru" else PANEL_RX) - PAD, 3300000 - PAD)
+            want = ((PANEL_LX if q["answer"] == "maru" else PANEL_RX) - PAD, PANEL_Y - PAD)
         if frames != [want]:
             problems.append(f"Q{i}: 赤枠が正解側にない {frames} / 期待 [{want}]")
 
@@ -85,15 +85,26 @@ def check(path):
         if nums != list(range(11)):
             problems.append(f"Q{i}: カウントダウンの数字が 0〜10 そろっていない")
 
-    bgm = etree.fromstring(z.read(f"ppt/slides/slide{len(slides) - 1}.xml"))
-    iseq = bgm.find('.//p:cTn[@nodeType="interactiveSeq"]', NS)
-    if iseq is None:
-        problems.append("BGMスライド: クリックトリガーが設定されていない")
-    else:
-        spid = iseq.find("p:stCondLst/p:cond/p:tgtEl/p:spTgt", NS).get("spid")
-        names = {e.get("id"): e.get("name") for e in bgm.iter(f'{{{NS["p"]}}}cNvPr')}
-        if names.get(spid) != "BGM再生ボタン":
-            problems.append(f"BGMスライド: トリガー対象が {names.get(spid)} になっている")
+    # クイズ以外の音つきスライドは「表示した瞬間に自動再生」(delay=0) であること
+    quiz_slides = {f"ppt/slides/slide{FIRST_QUIZ_SLIDE - 1 + i}.xml"
+                   for i in range(1, len(content.QUIZ) + 1)}
+    for name in slides:
+        if name in quiz_slides:
+            continue
+        root = etree.fromstring(z.read(name))
+        if root.find(".//p:timing//p:cmd", NS) is None:
+            continue                                   # 音のないスライド
+        first = root.find('.//p:cTn[@nodeType="mainSeq"]/p:childTnLst/p:par/p:cTn', NS)
+        cond = first.find("p:stCondLst/p:cond", NS)
+        if cond.get("delay") != "0":
+            problems.append(f"{name}: 音が自動再生になっていない (delay={cond.get('delay')})")
+
+    # 「中村になろうよ」スライドにBGMが入っているか
+    bgm_hits = [n for n in slides
+                if b"\xe4\xb8\xad\xe6\x9d\x91\xe3\x81\xab\xe3\x81\xaa\xe3\x82\x8d\xe3\x81\x86\xe3\x82\x88 BGM"
+                in z.read(n)]
+    if len(bgm_hits) != 1:
+        problems.append(f"中村になろうよのBGMが {len(bgm_hits)} 枚に入っている（1枚のはず）")
 
     return len(slides), problems
 

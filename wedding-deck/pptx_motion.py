@@ -173,7 +173,6 @@ class Timeline:
 
     def __init__(self):
         self._groups = []      # list[(auto: bool, list[_Effect])]
-        self._triggers = []    # list[(trigger_spid, list[_Effect])]
         self._audio_spids = []
         self._cursor = None
 
@@ -181,16 +180,6 @@ class Timeline:
         """次のクリックで再生されるグループを開く。"""
         self._groups.append((auto, []))
         self._cursor = self._groups[-1][1]
-        return self
-
-    def trigger(self, shape_id):
-        """指定した図形を「クリックしたとき」だけ再生されるグループを開く。
-
-        PowerPoint の［アニメーション］→［トリガー］→［クリック時］と同じ仕組み。
-        スライドを送る普通のクリックでは再生されない。
-        """
-        self._triggers.append((shape_id, []))
-        self._cursor = self._triggers[-1][1]
         return self
 
     def appear(self, spid, delay=0):
@@ -223,7 +212,7 @@ class Timeline:
 
     @property
     def is_empty(self):
-        return not any(e for _, e in self._groups) and not any(e for _, e in self._triggers)
+        return not any(effects for _, effects in self._groups)
 
     def _group_xml(self, effects, start_cond, next_id):
         """2段のラッパー <p:par> でくるんだ 1 グループ分の XML を返す。"""
@@ -266,22 +255,6 @@ class Timeline:
                 + "</p:childTnLst></p:cTn>" + _SEQ_CONDS + "</p:seq>"
             )
 
-        interactive = []
-        for trig_spid, effects in self._triggers:
-            if not effects:
-                continue
-            seq_id = next_id
-            next_id += 1
-            body, next_id = self._group_xml(effects, '<p:cond delay="0"/>', next_id)
-            interactive.append(
-                '<p:seq concurrent="1" nextAc="seek">'
-                f'<p:cTn id="{seq_id}" restart="whenNotActive" fill="hold" evt="onClick"'
-                f' nodeType="interactiveSeq">'
-                f'<p:stCondLst><p:cond evt="onClick" delay="0">'
-                f'<p:tgtEl><p:spTgt spid="{trig_spid}"/></p:tgtEl></p:cond></p:stCondLst>'
-                f'<p:endSync evt="end" delay="0"><p:rtn val="all"/></p:endSync>'
-                f"<p:childTnLst>{body}</p:childTnLst></p:cTn>" + _SEQ_CONDS + "</p:seq>"
-            )
 
         audio_nodes = []
         for spid in dict.fromkeys(self._audio_spids):
@@ -299,7 +272,6 @@ class Timeline:
             "<p:timing %s><p:tnLst><p:par>" % nsdecls("p", "a")
             + '<p:cTn id="1" dur="indefinite" restart="never" nodeType="tmRoot"><p:childTnLst>'
             + main_seq
-            + "".join(interactive)
             + "".join(audio_nodes)
             + "</p:childTnLst></p:cTn></p:par></p:tnLst></p:timing>"
         )

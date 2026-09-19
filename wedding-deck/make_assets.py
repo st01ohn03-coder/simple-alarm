@@ -97,6 +97,34 @@ def make_bingo_bg():
     img.save(IMG / "bg_bingo.png")
 
 
+# 顔で見分けてもらう問題なので、寄り方をファイルごとに指定する。
+# (中心x, 中心y, 幅) をいずれも画像幅・高さに対する割合で。
+QUIZ_CROPS = {
+    "child_real.jpg": (0.51, 0.34, 0.62),
+    "child_ai.jpg": (0.51, 0.34, 0.62),
+    "now_real.jpg": (0.46, 0.42, 0.95),
+    "now_ai.jpg": (0.52, 0.40, 1.00),
+}
+
+
+def crop_quiz_photos(ratio=2 / 3):
+    """写真問題の4枚を同じ縦横比にそろえ、顔がはっきり見える寄りにする。"""
+    src = ROOT / "assets" / "photos_src"
+    for f in sorted(src.glob("*.jpg")):
+        im = Image.open(f)
+        w, h = im.size
+        cx, cy, fw = QUIZ_CROPS[f.name]
+        cw = round(w * fw)
+        ch = round(cw / ratio)
+        if ch > h:                              # 画像より高くなるなら高さに合わせて縮める
+            ch, cw = h, round(h * ratio)
+        left = min(max(round(w * cx - cw / 2), 0), w - cw)
+        top = min(max(round(h * cy - ch / 2), 0), h - ch)
+        im.crop((left, top, left + cw, top + ch)).convert("RGB").save(
+            IMG / f"q_{f.name}", quality=90
+        )
+
+
 def make_silent_mp3(path, seconds=8.0):
     """無音のMPEG-1 Layer III (44.1kHz/128kbps) を組み立てる。
 
@@ -115,6 +143,8 @@ if __name__ == "__main__":
     make_section_bg()
     make_title_bg()
     make_bingo_bg()
-    make_silent_mp3(SFX / "bgm_kazoku_ni_narouyo_PLACEHOLDER.mp3")
-    for p in sorted(IMG.glob("bg_*.png")) + [SFX / "bgm_kazoku_ni_narouyo_PLACEHOLDER.mp3"]:
+    crop_quiz_photos()
+    make_silent_mp3(SFX / "bgm_nakamura_ni_narouyo_PLACEHOLDER.mp3")
+    for p in (sorted(IMG.glob("bg_*.png")) + sorted(IMG.glob("q_*.jpg"))
+              + [SFX / "bgm_nakamura_ni_narouyo_PLACEHOLDER.mp3"]):
         print(p.name, p.stat().st_size)
