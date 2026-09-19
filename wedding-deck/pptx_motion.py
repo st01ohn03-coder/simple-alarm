@@ -34,10 +34,32 @@ class Mp3:
     content_type = property(lambda self: "audio/mpeg")
     ext = property(lambda self: "mp3")
 
+    _BITRATES = [0, 32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320]
+    _RATES = [44100, 48000, 32000]
+
     @property
     def duration_ms(self):
-        """128kbps CBR 前提のおおよその長さ。dur 属性のヒントに使うだけ。"""
-        return int(len(self._blob) * 8 / 128000 * 1000)
+        """MPEG1 Layer3 のフレームを数えて長さを出す。VBR でも正しく求まる。
+
+        <p:cmd> の dur 属性に入れるヒント。PowerPoint 側でも再計算される。
+        """
+        b = self._blob
+        i = 0
+        if b[:3] == b"ID3":                      # ID3v2 タグを読み飛ばす
+            i = 10 + ((b[6] & 0x7F) << 21 | (b[7] & 0x7F) << 14
+                      | (b[8] & 0x7F) << 7 | (b[9] & 0x7F))
+        total = 0.0
+        while i < len(b) - 4:
+            if (b[i] == 0xFF and (b[i + 1] & 0xE0) == 0xE0
+                    and (b[i + 1] >> 3) & 3 == 3 and (b[i + 1] >> 1) & 3 == 1):
+                br = self._BITRATES[(b[i + 2] >> 4) & 0xF]
+                sr = self._RATES[(b[i + 2] >> 2) & 3]
+                if br and sr:
+                    total += 1152 / sr * 1000
+                    i += 144 * br * 1000 // sr + ((b[i + 2] >> 1) & 1)
+                    continue
+            i += 1
+        return int(total)
 
 
 _AUDIO_PIC = (

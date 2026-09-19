@@ -1,4 +1,7 @@
-"""結婚式スライド用のアセット（背景画像・無音プレースホルダー音源）を生成する。"""
+"""結婚式スライド用のアセット（背景画像・写真のトリミング）を生成する。
+
+音源は assets/sfx/ に置いたものをそのまま使うので、ここでは作らない。
+"""
 import math
 import random
 import struct
@@ -125,26 +128,11 @@ def crop_quiz_photos(ratio=2 / 3):
         )
 
 
-def make_silent_mp3(path, seconds=8.0):
-    """無音のMPEG-1 Layer III (44.1kHz/128kbps) を組み立てる。
-
-    本番の「家族になろうよ」音源に差し替えるためのプレースホルダー。
-    サイド情報を 0 埋めしたフレームはデコーダ上で無音になる。
-    """
-    header = b"\xff\xfb\x90\x64"  # MPEG1 / Layer3 / 128kbps / 44100Hz / joint stereo
-    frame = header + b"\x00" * (417 - len(header))
-    frames = int(seconds / (1152 / 44100))
-    # ID3v2 は付けない。PowerPoint は生フレームのみでも読み込める。
-    path.write_bytes(frame * frames)
-
-
 if __name__ == "__main__":
     make_quiz_bg()
     make_section_bg()
     make_title_bg()
     make_bingo_bg()
     crop_quiz_photos()
-    make_silent_mp3(SFX / "bgm_nakamura_ni_narouyo_PLACEHOLDER.mp3")
-    for p in (sorted(IMG.glob("bg_*.png")) + sorted(IMG.glob("q_*.jpg"))
-              + [SFX / "bgm_nakamura_ni_narouyo_PLACEHOLDER.mp3"]):
+    for p in sorted(IMG.glob("bg_*.png")) + sorted(IMG.glob("q_*.jpg")):
         print(p.name, p.stat().st_size)

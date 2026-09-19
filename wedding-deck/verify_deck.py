@@ -169,6 +169,13 @@ def check(path):
     bgm = [n for n in slides if "中村になろうよ BGM" in z.read(n).decode()]
     if len(bgm) != 1:
         problems.append(f"中村になろうよのBGMが {len(bgm)} 枚に入っている（1枚のはず）")
+    else:
+        # ダミー音源のまま出荷していないか（本番の曲は数MBある）
+        rels = z.read(f"ppt/slides/_rels/{Path(bgm[0]).name}.rels").decode()
+        target = re.search(r'Type="[^"]*/audio" Target="\.\./(media/[^"]+)"', rels)
+        size = z.getinfo(f"ppt/{target.group(1)}").file_size
+        if size < 1_000_000:
+            problems.append(f"中村になろうよのBGMがダミーのまま（{size} バイト）")
 
     return len(slides), sides, problems
 
