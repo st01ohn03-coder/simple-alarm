@@ -464,10 +464,9 @@ def build():
         quiz_question_slide(prs, audio, i, q)
         quiz_answer_slide(prs, audio, i, q)
 
-    section_slide(prs, audio, "結果発表", "最後まで勝ち残ったのは…？", sfx="sfx_drumroll.mp3")
-    win = bullet_slide(prs, "結果発表", "優勝！", [], big="最後まで立っていた\nこの方です！🎉")
-    apply_transition(win, "fade")
-    add_notes(win, "最後まで残った方をその場で読み上げ、前へお呼びしてください。")
+    section_slide(prs, audio, "結果発表", "最後まで残った方に、大きな拍手を👏",
+                  sfx="sfx_drumroll.mp3",
+                  note="表彰はせず、その場で拍手して次へ進む想定です。")
 
     # --- ② 中村になろうよ ---
     nakamura_slide(prs, audio)

@@ -143,6 +143,15 @@ def check(path):
                 problems.append(
                     f"Q{i}: {Path(name).name} の写真が {n_pic - 1 - audio_n} 枚（期待 {want}）")
 
+    # スライドに穴埋めの跡（{{ }} や 〇〇 など）が残っていないこと
+    blanks = re.compile(r"\{\{|\}\}|〇〇|○○|＿＿|ＸＸ|XXX")
+    for i, name in enumerate(slides, start=1):
+        text = "".join(e.text or "" for e in etree.fromstring(z.read(name))
+                       .iter(f'{{{NS["a"]}}}t'))
+        found = set(blanks.findall(text))
+        if found:
+            problems.append(f"{i}枚目: 穴埋めの跡が残っている {sorted(found)}")
+
     bgm = [n for n in slides if "中村になろうよ BGM" in z.read(n).decode()]
     if len(bgm) != 1:
         problems.append(f"中村になろうよのBGMが {len(bgm)} 枚に入っている（1枚のはず）")
