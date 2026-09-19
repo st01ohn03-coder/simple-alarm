@@ -22,7 +22,7 @@ NS = {
     "a": "http://schemas.openxmlformats.org/drawingml/2006/main",
     "p": "http://schemas.openxmlformats.org/presentationml/2006/main",
 }
-FIRST_QUIZ_SLIDE = 11           # ウェルカム1 + 流れ1 + 開会〜歓談4 + 扉1 + ルール3 の次
+FIRST_QUIZ_SLIDE = 9            # ウェルカム1 + 流れ1 + 開会/乾杯2 + 扉1 + ルール3 の次
 MAX_SAME_SIDE_RUN = 3           # 同じ側の正解がこれ以上続いたら読まれてしまう
 
 
@@ -68,8 +68,6 @@ def check(path):
         qtext, atext = _text(qroot), _text(aroot)
 
         # 問題スライドに答えが載っていないこと
-        if q["reveal"] and q["reveal"] in qtext:
-            problems.append(f"Q{i}: 問題スライドに解説コメントが載っている")
         if "正解" in qtext:
             problems.append(f"Q{i}: 問題スライドに「正解」の文字がある")
         if q.get("layout") != "photo2":
@@ -78,10 +76,15 @@ def check(path):
                     problems.append(f"Q{i}: 問題スライドに選択肢『{q[key]}』が出ていない")
             if q["correct"].replace(" ", "") not in atext.replace(" ", ""):
                 problems.append(f"Q{i}: 答えスライドに正解『{q['correct']}』が出ていない")
-        if q["reveal"] and q["reveal"] not in atext:
-            problems.append(f"Q{i}: 答えスライドに解説コメントが出ていない")
 
         # 問題＝クリック待ち、答え＝自動再生
+        # 答えスライドは正解のほかに余計な文言を載せない
+        extra = atext.replace(f"第 {i} 問　こたえ", "").replace("最終問題　こたえ", "")
+        extra = extra.replace(f'正解は …　{"左" if q["side"] == "left" else "右"} ！', "")
+        extra = extra.replace(q["correct"], "") if q.get("layout") != "photo2" else extra
+        if extra.strip():
+            problems.append(f"Q{i}: 答えスライドに余計な文言がある『{extra.strip()[:30]}』")
+
         qc = qroot.find('.//p:cTn[@nodeType="mainSeq"]/p:childTnLst/p:par/p:cTn'
                         "/p:stCondLst/p:cond", NS)
         if qc is None or qc.get("delay") != "indefinite":

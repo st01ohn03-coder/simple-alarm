@@ -61,16 +61,14 @@ Q2_ARROW = dict(cx=900000, cy=350000, y=5370000)
 Q2_SIDELBL = dict(y=5760000, cy=400000)
 
 # 答えスライド
-A_LABEL = dict(x=900000, y=1180000, cx=10392000, cy=760000)
+A_LABEL = dict(x=900000, y=1600000, cx=10392000, cy=800000)
 A_BADGE = dict(x=620000, y=300000, cx=3350000, cy=820000)
-A_ARROW = dict(cx=1500000, cy=700000, y=2080000)
-A_PANEL = dict(x=2596000, y=2820000, cx=7000000, cy=1700000)
-A_RIBBON = dict(x=1150000, y=4820000, cx=9892000, cy=1050000)
+A_ARROW = dict(cx=1500000, cy=700000, y=2600000)
+A_PANEL = dict(x=2596000, y=3450000, cx=7000000, cy=1900000)
 # 答えスライド（写真くらべ）。矢印は写真の外側に置いて、正解の側を指す
 A2_LABEL = dict(x=900000, y=1000000, cx=10392000, cy=800000)
 A2_PHOTO = dict(x=4896000, y=1900000, cx=2400000, cy=3600000)
 A2_ARROW = dict(cx=1200000, cy=560000, y=3420000, gap=420000)
-A2_RIBBON = dict(x=1150000, y=5650000, cx=9892000, cy=900000)
 
 SIDE_JP = dict(left="左", right="右")
 SIDE_COLOR = dict(left=None, right=None)      # build() で ROSE / NAVY を入れる
@@ -308,11 +306,6 @@ def quiz_answer_slide(prs, audio, index, q):
         reveals = [arrow.shape_id, panel.shape_id]
         pulse_on = panel.shape_id
 
-    rib_geo = A2_RIBBON if photo else A_RIBBON
-    ribbon = rounded(slide, rib_geo["x"], rib_geo["y"], rib_geo["cx"], rib_geo["cy"],
-                     DEEP, GOLD, 3, 0.25)
-    fill_shape_text(ribbon, [(q["reveal"], 22, True, WHITE)])
-
     spid, dur = audio.add(slide, str(SFX / "sfx_answer.mp3"), "正解発表効果音", _next_id(slide))
 
     tl = Timeline()
@@ -320,14 +313,13 @@ def quiz_answer_slide(prs, audio, index, q):
     for sid in reveals:
         tl.appear(sid)
     tl.pulse(pulse_on)
-    tl.group().appear(ribbon.shape_id)
     apply_transition(slide, "fade")
     apply_timing(slide, tl)
 
     add_notes(slide, "\n".join([
         f'【第{index}問】正解：{SIDE_JP[side]} 「{q["correct"]}」',
         "スライドを表示した瞬間に効果音が鳴り、正解が出ます（クリック不要）。",
-        "もう一度クリックすると、下の解説コメントが出ます。",
+        "補足したいことがあれば、この画面のまま口頭でどうぞ。",
         "",
         f'不正解だった側（{SIDE_JP["right" if side == "left" else "left"]}）の方はお席へどうぞ。',
     ]))
