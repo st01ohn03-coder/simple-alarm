@@ -22,7 +22,7 @@ NS = {
     "a": "http://schemas.openxmlformats.org/drawingml/2006/main",
     "p": "http://schemas.openxmlformats.org/presentationml/2006/main",
 }
-FIRST_QUIZ_SLIDE = 6            # 表紙1 + ルール3 + セクション扉1 の次
+FIRST_QUIZ_SLIDE = 11           # ウェルカム1 + 流れ1 + 開会〜歓談4 + 扉1 + ルール3 の次
 MAX_SAME_SIDE_RUN = 3           # 同じ側の正解がこれ以上続いたら読まれてしまう
 
 
@@ -72,7 +72,7 @@ def check(path):
             problems.append(f"Q{i}: 問題スライドに解説コメントが載っている")
         if "正解" in qtext:
             problems.append(f"Q{i}: 問題スライドに「正解」の文字がある")
-        if q.get("layout") != "photo4":
+        if q.get("layout") != "photo2":
             for key in ("correct", "dummy"):
                 if q[key].replace(" ", "") not in qtext.replace(" ", ""):
                     problems.append(f"Q{i}: 問題スライドに選択肢『{q[key]}』が出ていない")
@@ -126,6 +126,22 @@ def check(path):
                          "/p:stCondLst/p:cond", NS)
         if cond.get("delay") != "0":
             problems.append(f"{name}: 音が自動再生になっていない (delay={cond.get('delay')})")
+
+    # 写真問題は、問題スライドに2枚・答えスライドに1枚だけ写真が出ること
+    for i, q in enumerate(content.QUIZ, start=1):
+        if q.get("layout") != "photo2":
+            continue
+        qn = f"ppt/slides/slide{FIRST_QUIZ_SLIDE + (i - 1) * 2}.xml"
+        an = f"ppt/slides/slide{FIRST_QUIZ_SLIDE + (i - 1) * 2 + 1}.xml"
+        for name, want in ((qn, 2), (an, 1)):
+            root = etree.fromstring(z.read(name))
+            n_pic = len(list(root.iter(f'{{{NS["p"]}}}pic')))
+            # 背景画像1枚と音声オブジェクトも <p:pic> なので差し引く
+            audio_n = z.read(f"ppt/slides/_rels/{Path(name).name}.rels").decode().count(
+                '/relationships/audio"')
+            if n_pic - 1 - audio_n != want:
+                problems.append(
+                    f"Q{i}: {Path(name).name} の写真が {n_pic - 1 - audio_n} 枚（期待 {want}）")
 
     bgm = [n for n in slides if "中村になろうよ BGM" in z.read(n).decode()]
     if len(bgm) != 1:

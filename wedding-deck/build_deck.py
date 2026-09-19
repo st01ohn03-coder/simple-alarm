@@ -53,12 +53,12 @@ Q_ARROW = dict(cx=1200000, cy=600000, y=3080000)
 Q_ANSWER = dict(y=3780000, cy=1300000)
 Q_SIDELBL = dict(y=5080000, cy=420000)
 Q_HINT = dict(x=1150000, y=5750000, cx=9892000, cy=750000)
-# 問題スライド（写真4枚くらべ）。問題文が短いぶんパネルを高くとる
-Q4_TEXT = dict(x=900000, y=1150000, cx=10392000, cy=1100000)
-Q4_PANEL = dict(y=2400000, cy=3150000, cx=4650000, lx=1150000, rx=6392000)
-Q4_PHOTO = dict(cx=1334000, cy=2000000, y=2560000, gap=120000)
-Q4_ARROW = dict(cx=1000000, cy=460000, y=4650000)
-Q4_SIDELBL = dict(y=5120000, cy=400000)
+# 問題スライド（写真くらべ）。写真を大きく見せるためパネルを縦いっぱいにとる
+Q2_TEXT = dict(x=900000, y=1000000, cx=10392000, cy=1000000)
+Q2_PANEL = dict(y=2150000, cy=4150000, cx=3000000, lx=2496000, rx=6696000)
+Q2_PHOTO = dict(cx=2000000, cy=3000000, y=2280000)
+Q2_ARROW = dict(cx=900000, cy=350000, y=5370000)
+Q2_SIDELBL = dict(y=5760000, cy=400000)
 
 # 答えスライド
 A_LABEL = dict(x=900000, y=1180000, cx=10392000, cy=760000)
@@ -66,11 +66,11 @@ A_BADGE = dict(x=620000, y=300000, cx=3350000, cy=820000)
 A_ARROW = dict(cx=1500000, cy=700000, y=2080000)
 A_PANEL = dict(x=2596000, y=2820000, cx=7000000, cy=1700000)
 A_RIBBON = dict(x=1150000, y=4820000, cx=9892000, cy=1050000)
-# 答えスライド（写真4枚くらべ）
-A4_ARROW_Y = 1900000
-A4_PANEL = dict(x=3396000, y=2620000, cx=5400000, cy=2450000)
-A4_PHOTO = dict(cx=1333000, cy=2000000, y=2780000, gap=140000)
-A4_RIBBON = dict(x=1150000, y=5250000, cx=9892000, cy=1000000)
+# 答えスライド（写真くらべ）。矢印は写真の外側に置いて、正解の側を指す
+A2_LABEL = dict(x=900000, y=1000000, cx=10392000, cy=800000)
+A2_PHOTO = dict(x=4896000, y=1900000, cx=2400000, cy=3600000)
+A2_ARROW = dict(cx=1200000, cy=560000, y=3420000, gap=420000)
+A2_RIBBON = dict(x=1150000, y=5650000, cx=9892000, cy=900000)
 
 SIDE_JP = dict(left="左", right="右")
 SIDE_COLOR = dict(left=None, right=None)      # build() で ROSE / NAVY を入れる
@@ -202,25 +202,31 @@ def _choice_texts(q):
     return q["dummy"], q["correct"]
 
 
-def _photo_names(q, side):
-    """その側に並べる写真のファイル名。"""
-    key = "correct" if side == q["side"] else "dummy"
-    return content.PHOTO4[key]
+def _photo_name(q, side):
+    """その側に出す写真のファイル名。"""
+    return content.PHOTO2["correct" if side == q["side"] else "dummy"]
+
+
+def _photo_pic(slide, name, x, y, cx, cy, side):
+    pic = slide.shapes.add_picture(str(IMG / name), Emu(x), Emu(y), Emu(cx), Emu(cy))
+    pic.line.color.rgb = SIDE_COLOR[side]
+    pic.line.width = Pt(2.5)
+    return pic
 
 
 def quiz_question_slide(prs, audio, index, q):
     """問題だけを出すスライド。答えは一切載せない。"""
     slide = prs.slides.add_slide(prs.slide_layouts[6])
     add_bg(slide, "bg_quiz.png")
-    photo = q.get("layout") == "photo4"
+    photo = q.get("layout") == "photo2"
 
     badge = rounded(slide, BADGE["x"], BADGE["y"], BADGE["cx"], BADGE["cy"], DEEP, GOLD, 3, 0.5)
     fill_shape_text(badge, [("最終問題" if q.get("final") else f"第 {index} 問", 26, True, WHITE)])
 
-    txt = Q4_TEXT if photo else Q_TEXT
-    panel_geo = Q4_PANEL if photo else Q_PANEL
-    arrow_geo = Q4_ARROW if photo else Q_ARROW
-    label_geo = Q4_SIDELBL if photo else Q_SIDELBL
+    txt = Q2_TEXT if photo else Q_TEXT
+    panel_geo = Q2_PANEL if photo else Q_PANEL
+    arrow_geo = Q2_ARROW if photo else Q_ARROW
+    label_geo = Q2_SIDELBL if photo else Q_SIDELBL
     textbox(slide, txt["x"], txt["y"], txt["cx"], txt["cy"], [(q["q"], 31, True, INK)])
 
     texts = dict(zip(("left", "right"), _choice_texts(q)))
@@ -229,16 +235,9 @@ def quiz_question_slide(prs, audio, index, q):
         rounded(slide, px, panel_geo["y"], panel_geo["cx"], panel_geo["cy"], WHITE,
                 SIDE_COLOR[side], 6)
         if photo:
-            span = Q4_PHOTO["cx"] * 2 + Q4_PHOTO["gap"]
-            start = px + (panel_geo["cx"] - span) // 2
-            for i, name in enumerate(_photo_names(q, side)):
-                pic = slide.shapes.add_picture(
-                    str(IMG / name),
-                    Emu(start + i * (Q4_PHOTO["cx"] + Q4_PHOTO["gap"])), Emu(Q4_PHOTO["y"]),
-                    Emu(Q4_PHOTO["cx"]), Emu(Q4_PHOTO["cy"]),
-                )
-                pic.line.color.rgb = SIDE_COLOR[side]
-                pic.line.width = Pt(2)
+            _photo_pic(slide, _photo_name(q, side),
+                       px + (panel_geo["cx"] - Q2_PHOTO["cx"]) // 2, Q2_PHOTO["y"],
+                       Q2_PHOTO["cx"], Q2_PHOTO["cy"], side)
         else:
             textbox(slide, px + 120000, Q_ANSWER["y"], panel_geo["cx"] - 240000,
                     Q_ANSWER["cy"], [(texts[side], 25, True, INK)])
@@ -251,8 +250,10 @@ def quiz_question_slide(prs, audio, index, q):
     cd_id, cd_dur = audio.add(slide, str(SFX / "sfx_countdown10.mp3"),
                               "カウントダウンBGM", _next_id(slide))
 
-    textbox(slide, Q_HINT["x"], Q_HINT["y"], Q_HINT["cx"], Q_HINT["cy"],
-            [("どちらだと思いますか？　カウントダウン10秒のあいだに移動してください", 19, True, INK)])
+    if not photo:      # 写真くらべはパネルが縦いっぱいなので下の一言は省く
+        textbox(slide, Q_HINT["x"], Q_HINT["y"], Q_HINT["cx"], Q_HINT["cy"],
+                [("どちらだと思いますか？　カウントダウン10秒のあいだに移動してください",
+                  19, True, INK)])
 
     tl = Timeline()
     tl.group().countdown(oval_id, number_ids, cd_id, cd_dur)
@@ -275,37 +276,39 @@ def quiz_answer_slide(prs, audio, index, q):
     """答えだけを出すスライド。開いた瞬間にファンファーレが鳴る。"""
     slide = prs.slides.add_slide(prs.slide_layouts[6])
     add_bg(slide, "bg_quiz.png")
-    photo = q.get("layout") == "photo4"
+    photo = q.get("layout") == "photo2"
     side = q["side"]
 
     badge = rounded(slide, A_BADGE["x"], A_BADGE["y"], A_BADGE["cx"], A_BADGE["cy"],
                     DEEP, GOLD, 3, 0.5)
-    fill_shape_text(badge, [(f"第 {index} 問　こたえ", 24, True, WHITE)])
-    textbox(slide, A_LABEL["x"], A_LABEL["y"], A_LABEL["cx"], A_LABEL["cy"],
+    fill_shape_text(badge, [("最終問題　こたえ" if q.get("final")
+                             else f"第 {index} 問　こたえ", 24, True, WHITE)])
+    lbl = A2_LABEL if photo else A_LABEL
+    textbox(slide, lbl["x"], lbl["y"], lbl["cx"], lbl["cy"],
             [(f'正解は …　{SIDE_JP[side]} ！', 34, True, SIDE_COLOR[side])])
 
-    arrow_y = A4_ARROW_Y if photo else A_ARROW["y"]
-    arrow = add_arrow(slide, side, 6096000, arrow_y, A_ARROW["cx"], A_ARROW["cy"])
-
-    geo = A4_PANEL if photo else A_PANEL
-    panel = rounded(slide, geo["x"], geo["y"], geo["cx"], geo["cy"], WHITE, SIDE_COLOR[side], 6)
-    extras = []
+    reveals = []
     if photo:
-        span = A4_PHOTO["cx"] * 2 + A4_PHOTO["gap"]
-        start = geo["x"] + (geo["cx"] - span) // 2
-        for i, name in enumerate(content.PHOTO4["correct"]):
-            pic = slide.shapes.add_picture(
-                str(IMG / name),
-                Emu(start + i * (A4_PHOTO["cx"] + A4_PHOTO["gap"])), Emu(A4_PHOTO["y"]),
-                Emu(A4_PHOTO["cx"]), Emu(A4_PHOTO["cy"]),
-            )
-            pic.line.color.rgb = SIDE_COLOR[side]
-            pic.line.width = Pt(2)
-            extras.append(pic.shape_id)
+        pic = _photo_pic(slide, content.PHOTO2["correct"], A2_PHOTO["x"], A2_PHOTO["y"],
+                         A2_PHOTO["cx"], A2_PHOTO["cy"], side)
+        # 矢印は写真の外側。正解が左なら左、右なら右を指す
+        if side == "left":
+            ax = A2_PHOTO["x"] - A2_ARROW["cx"] - A2_ARROW["gap"]
+        else:
+            ax = A2_PHOTO["x"] + A2_PHOTO["cx"] + A2_ARROW["gap"]
+        arrow = add_arrow(slide, side, ax + A2_ARROW["cx"] // 2, A2_ARROW["y"],
+                          A2_ARROW["cx"], A2_ARROW["cy"])
+        reveals = [pic.shape_id, arrow.shape_id]
+        pulse_on = pic.shape_id
     else:
+        arrow = add_arrow(slide, side, 6096000, A_ARROW["y"], A_ARROW["cx"], A_ARROW["cy"])
+        panel = rounded(slide, A_PANEL["x"], A_PANEL["y"], A_PANEL["cx"], A_PANEL["cy"],
+                        WHITE, SIDE_COLOR[side], 6)
         fill_shape_text(panel, [(q["correct"], 30, True, INK)])
+        reveals = [arrow.shape_id, panel.shape_id]
+        pulse_on = panel.shape_id
 
-    rib_geo = A4_RIBBON if photo else A_RIBBON
+    rib_geo = A2_RIBBON if photo else A_RIBBON
     ribbon = rounded(slide, rib_geo["x"], rib_geo["y"], rib_geo["cx"], rib_geo["cy"],
                      DEEP, GOLD, 3, 0.25)
     fill_shape_text(ribbon, [(q["reveal"], 22, True, WHITE)])
@@ -313,10 +316,10 @@ def quiz_answer_slide(prs, audio, index, q):
     spid, dur = audio.add(slide, str(SFX / "sfx_answer.mp3"), "正解発表効果音", _next_id(slide))
 
     tl = Timeline()
-    tl.group(auto=True).play(spid, dur).appear(arrow.shape_id).appear(panel.shape_id)
-    for sid in extras:
+    tl.group(auto=True).play(spid, dur)
+    for sid in reveals:
         tl.appear(sid)
-    tl.pulse(panel.shape_id)
+    tl.pulse(pulse_on)
     tl.group().appear(ribbon.shape_id)
     apply_transition(slide, "fade")
     apply_timing(slide, tl)
@@ -334,9 +337,13 @@ def quiz_answer_slide(prs, audio, index, q):
 def section_slide(prs, audio, head, sub=None, bg="bg_section.png", sfx=None, note=None):
     slide = prs.slides.add_slide(prs.slide_layouts[6])
     add_bg(slide, bg)
-    textbox(slide, 900000, 2150000, 10392000, 1450000, [(head, 56, True, WHITE)])
+    # 見出しが2行のときは、副題とぶつからないよう上に寄せて間隔をあける
+    two_line = "\n" in head
+    head_y, head_cy = (1900000, 1800000) if two_line else (2150000, 1450000)
+    textbox(slide, 900000, head_y, 10392000, head_cy, [(head, 56, True, WHITE)])
     if sub:
-        textbox(slide, 900000, 3750000, 10392000, 700000, [(sub, 22, False, SAND)])
+        textbox(slide, 900000, 4150000 if two_line else 3750000, 10392000, 700000,
+                [(sub, 22, False, SAND)])
     apply_transition(slide, "fade")
     if sfx:
         spid, dur = audio.add(slide, str(SFX / sfx), "セクション効果音", _next_id(slide))
@@ -367,8 +374,10 @@ def bullet_slide(prs, head, title, lines, bg="bg_quiz.png", move=False, big=None
     elif big:
         textbox(slide, 900000, 2400000, 10392000, 2600000, [(big, 60, True, DEEP)])
     else:
+        numbered = lines and lines[0][:1].isdigit()
         textbox(slide, 1300000, 2350000, 9600000, 3400000,
-                [(f"・{t}", 25, False, INK) for t in lines],
+                [(t if numbered else f"・{t}", 22 if numbered else 25, False, INK)
+                 for t in lines],
                 align=PP_ALIGN.LEFT, anchor=MSO_ANCHOR.MIDDLE)
     return slide
 
@@ -393,7 +402,7 @@ def nakamura_slide(prs, audio):
     textbox(slide, 900000, 1250000, 10392000, 800000, [("CEREMONY", 24, True, GOLD)])
     textbox(slide, 900000, 2050000, 10392000, 1500000, [("中村になろうよ", 66, True, DEEP)])
     textbox(slide, 900000, 4050000, 10392000, 1100000,
-            [("{{この時間の演出・ひとこと}}", 26, True, INK)])
+            [("ふたりの新しい名字は「中村」。\nここから、家族になります。", 24, True, INK)])
 
     spid, dur = audio.add(slide, str(SFX / BGM), "中村になろうよ BGM", _next_id(slide))
     tl = Timeline()
@@ -423,30 +432,42 @@ def build():
     SIDE_COLOR.update(left=ROSE, right=NAVY)
     audio = AudioLibrary(prs, str(IMG / "audio_icon.png"))
 
-    # --- 表紙 ---
+    # --- ウェルカム（開演前に映しておくスライド） ---
     title = prs.slides.add_slide(prs.slide_layouts[6])
     add_bg(title, "bg_title.png")
-    textbox(title, 900000, 1500000, 10392000, 900000,
-            [("新郎新婦のことどれだけ知ってる？", 26, True, GOLD)])
-    textbox(title, 900000, 2400000, 10392000, 1600000, [("2択 クイズ大会", 68, True, DEEP)])
-    textbox(title, 900000, 4200000, 10392000, 900000,
-            [("→ 中村になろうよ → ビンゴ大会 🎉", 28, True, INK)])
+    textbox(title, 900000, 1400000, 10392000, 800000,
+            [("WELCOME TO OUR WEDDING PARTY", 22, True, GOLD)])
+    textbox(title, 900000, 2250000, 10392000, 1500000,
+            [(content.PARTY_TITLE, 60, True, DEEP)])
+    textbox(title, 900000, 4100000, 10392000, 1000000,
+            [("本日はお越しいただき\nありがとうございます", 26, True, INK)])
     apply_transition(title, "fade")
+    add_notes(title, "開演前はこのスライドを映しておいてください。")
 
-    # --- ルール説明 ---
+    # --- 本日の流れ ---
+    prog = bullet_slide(prs, "PROGRAM", "本日の流れ",
+                        [f"{i}.　{t}" for i, t in enumerate(content.PROGRAM, start=1)])
+    apply_transition(prog, "fade")
+
+    # --- 開会のごあいさつ 〜 ご歓談 ---
+    for item in content.OPENING:
+        section_slide(prs, audio, item["head"], item.get("sub"),
+                      bg=item.get("bg", "bg_section.png"), sfx=item.get("sfx"))
+
+    # --- ① 2択クイズ大会 ---
+    section_slide(prs, audio, "2択クイズ大会", "新郎新婦のことどれだけ知ってる？",
+                  sfx="sfx_answer.mp3")
     for r in content.RULES:
         bullet_slide(prs, r["head"], r["title"], r.get("lines", []), move=r.get("move", False))
 
-    # --- ① ○×クイズ ---
-    section_slide(prs, audio, "2択クイズ", "さあ、スタートです！", sfx="sfx_answer.mp3")
     for i, q in enumerate(content.QUIZ, start=1):
         quiz_question_slide(prs, audio, i, q)
         quiz_answer_slide(prs, audio, i, q)
 
     section_slide(prs, audio, "結果発表", "最後まで勝ち残ったのは…？", sfx="sfx_drumroll.mp3")
-    win = bullet_slide(prs, "結果発表", "優勝！", [], big="{{優勝者のお名前}} 様")
+    win = bullet_slide(prs, "結果発表", "優勝！", [], big="最後まで立っていた\nこの方です！🎉")
     apply_transition(win, "fade")
-    add_notes(win, "{{優勝者のお名前}} を当日その場で入力するか、口頭で読み上げてください。")
+    add_notes(win, "最後まで残った方をその場で読み上げ、前へお呼びしてください。")
 
     # --- ② 中村になろうよ ---
     nakamura_slide(prs, audio)
@@ -458,12 +479,15 @@ def build():
         bingo_slide(prs, audio, item)
 
     # --- エンディング ---
+    section_slide(prs, audio, content.CLOSING["head"], content.CLOSING["sub"] or None)
+
     end = prs.slides.add_slide(prs.slide_layouts[6])
     add_bg(end, "bg_title.png")
     textbox(end, 900000, 1900000, 10392000, 1600000,
-            [("本日はご列席いただき\nありがとうございました", 42, True, DEEP)])
+            [("本日はお集まりいただき\nありがとうございました", 42, True, DEEP)])
     textbox(end, 900000, 3900000, 10392000, 1200000,
             [("これからもふたりをよろしくお願いします🤍", 24, True, INK)])
+    add_notes(end, "お開きのごあいさつのあと、このスライドを映したままお見送りへ。")
     apply_transition(end, "fade")
 
     OUT.parent.mkdir(parents=True, exist_ok=True)
