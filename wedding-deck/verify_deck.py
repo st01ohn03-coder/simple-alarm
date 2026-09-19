@@ -3,8 +3,9 @@
 
 ・パッケージの参照（画像・音源）が壊れていないか
 ・アニメーションの対象figureが実在するか、IDが重複していないか
-・○×クイズの赤枠が正解側に置かれているか
-・各問にカウントダウンBGMと正解効果音が入っているか
+・問題スライドに答えが漏れていないか（答えは必ず次のスライド）
+・正解が左右どちらかに偏っていないか
+・音の鳴り方（問題＝クリック待ち／それ以外＝自動再生）が意図どおりか
 """
 from __future__ import annotations
 
@@ -21,10 +22,12 @@ NS = {
     "a": "http://schemas.openxmlformats.org/drawingml/2006/main",
     "p": "http://schemas.openxmlformats.org/presentationml/2006/main",
 }
-PANEL_LX, PANEL_RX, PANEL_Y = 1150000, 6792000, 3300000
-P4_LX, P4_RX, P4_Y = 1150000, 6392000, 1880000
-PAD = 110000
-FIRST_QUIZ_SLIDE = 6          # 表紙1 + ルール3 + セクション扉1 の次
+FIRST_QUIZ_SLIDE = 6            # 表紙1 + ルール3 + セクション扉1 の次
+MAX_SAME_SIDE_RUN = 3           # 同じ側の正解がこれ以上続いたら読まれてしまう
+
+
+def _text(root):
+    return "".join(t.text or "" for t in root.iter(f'{{{NS["a"]}}}t'))
 
 
 def check(path):
@@ -35,12 +38,12 @@ def check(path):
         key=lambda n: int(re.search(r"(\d+)", n.rsplit("/", 1)[1]).group(1)),
     )
 
+    # --- パッケージの健全性 ---
     for name in slides:
         root = etree.fromstring(z.read(name))
-        rels_raw = z.read(f"ppt/slides/_rels/{Path(name).name}.rels").decode()
-        rel_ids = set(re.findall(r'Id="([^"]+)"', rels_raw))
         xml = z.read(name).decode()
-
+        rel_ids = set(re.findall(r'Id="([^"]+)"',
+                                 z.read(f"ppt/slides/_rels/{Path(name).name}.rels").decode()))
         dangling = (set(re.findall(r'r:(?:embed|link)="([^"]+)"', xml)) - {""}) - rel_ids
         if dangling:
             problems.append(f"{name}: 参照切れ {dangling}")
@@ -51,71 +54,95 @@ def check(path):
         orphans = {t.get("spid") for t in root.iter(f'{{{NS["p"]}}}spTgt')} - set(shape_ids)
         if orphans:
             problems.append(f"{name}: アニメ対象が存在しない {orphans}")
-
         ctn_ids = [e.get("id") for e in root.iter(f'{{{NS["p"]}}}cTn')]
         if len(ctn_ids) != len(set(ctn_ids)):
             problems.append(f"{name}: アニメーションIDが重複")
 
+    # --- 問題と答えの分離 ---
+    quiz_slides = set()
     for i, q in enumerate(content.QUIZ, start=1):
-        name = f"ppt/slides/slide{FIRST_QUIZ_SLIDE - 1 + i}.xml"
-        root = etree.fromstring(z.read(name))
-        frames = []
-        for sp in root.iter(f'{{{NS["p"]}}}sp'):
-            clr = sp.find(".//a:ln/a:solidFill/a:srgbClr", NS)
-            if clr is not None and clr.get("val") == "FF0000":
-                off = sp.find(".//a:off", NS)
-                frames.append((int(off.get("x")), int(off.get("y"))))
-        if q.get("layout") == "photo4":
-            want = ((P4_LX if q["answer"] == "maru" else P4_RX) - PAD, P4_Y - PAD)
-        else:
-            want = ((PANEL_LX if q["answer"] == "maru" else PANEL_RX) - PAD, PANEL_Y - PAD)
-        if frames != [want]:
-            problems.append(f"Q{i}: 赤枠が正解側にない {frames} / 期待 [{want}]")
+        qn = f"ppt/slides/slide{FIRST_QUIZ_SLIDE + (i - 1) * 2}.xml"
+        an = f"ppt/slides/slide{FIRST_QUIZ_SLIDE + (i - 1) * 2 + 1}.xml"
+        quiz_slides |= {qn, an}
+        qroot, aroot = etree.fromstring(z.read(qn)), etree.fromstring(z.read(an))
+        qtext, atext = _text(qroot), _text(aroot)
 
-        seq = root.find('.//p:seq/p:cTn[@nodeType="mainSeq"]/p:childTnLst', NS)
-        n_groups = len(seq.findall("p:par", NS)) if seq is not None else 0
-        if n_groups != 2:
-            problems.append(f"Q{i}: クリックが{n_groups}段（カウントダウンと正解発表の2段が必要）")
+        # 問題スライドに答えが載っていないこと
+        if q["reveal"] and q["reveal"] in qtext:
+            problems.append(f"Q{i}: 問題スライドに解説コメントが載っている")
+        if "正解" in qtext:
+            problems.append(f"Q{i}: 問題スライドに「正解」の文字がある")
+        if q.get("layout") != "photo4":
+            for key in ("correct", "dummy"):
+                if q[key].replace(" ", "") not in qtext.replace(" ", ""):
+                    problems.append(f"Q{i}: 問題スライドに選択肢『{q[key]}』が出ていない")
+            if q["correct"].replace(" ", "") not in atext.replace(" ", ""):
+                problems.append(f"Q{i}: 答えスライドに正解『{q['correct']}』が出ていない")
+        if q["reveal"] and q["reveal"] not in atext:
+            problems.append(f"Q{i}: 答えスライドに解説コメントが出ていない")
 
-        rels_raw = z.read(f"ppt/slides/_rels/{Path(name).name}.rels").decode()
-        if rels_raw.count('/relationships/audio"') != 2:
-            problems.append(f"Q{i}: 音源が2つ入っていない")
+        # 問題＝クリック待ち、答え＝自動再生
+        qc = qroot.find('.//p:cTn[@nodeType="mainSeq"]/p:childTnLst/p:par/p:cTn'
+                        "/p:stCondLst/p:cond", NS)
+        if qc is None or qc.get("delay") != "indefinite":
+            problems.append(f"Q{i}: 問題スライドのカウントダウンがクリック待ちになっていない")
+        ac = aroot.find('.//p:cTn[@nodeType="mainSeq"]/p:childTnLst/p:par/p:cTn'
+                        "/p:stCondLst/p:cond", NS)
+        if ac is None or ac.get("delay") != "0":
+            problems.append(f"Q{i}: 答えスライドの効果音が自動再生になっていない")
 
-        nums = sorted(int(t) for t in re.findall(r"<a:t>(\d+)</a:t>", z.read(name).decode()))
+        # 問題スライドはカウントダウンBGMのみ、答えスライドは正解音のみ
+        for slide_name, want in ((qn, 1), (an, 1)):
+            rels = z.read(f"ppt/slides/_rels/{Path(slide_name).name}.rels").decode()
+            got = rels.count('/relationships/audio"')
+            if got != want:
+                problems.append(f"Q{i}: {Path(slide_name).name} の音源が {got} 個（期待 {want}）")
+
+        nums = sorted(int(t) for t in re.findall(r"<a:t>(\d+)</a:t>", z.read(qn).decode()))
         if nums != list(range(11)):
             problems.append(f"Q{i}: カウントダウンの数字が 0〜10 そろっていない")
 
-    # クイズ以外の音つきスライドは「表示した瞬間に自動再生」(delay=0) であること
-    quiz_slides = {f"ppt/slides/slide{FIRST_QUIZ_SLIDE - 1 + i}.xml"
-                   for i in range(1, len(content.QUIZ) + 1)}
+    # --- 正解の左右の偏り ---
+    sides = [q["side"] for q in content.QUIZ]
+    if len(set(sides)) < 2:
+        problems.append("正解が片側に固定されている")
+    run = best = 1
+    for a, b in zip(sides, sides[1:]):
+        run = run + 1 if a == b else 1
+        best = max(best, run)
+    if best >= MAX_SAME_SIDE_RUN:
+        problems.append(f"同じ側の正解が {best} 問続いている（読まれやすい）")
+    if abs(sides.count("left") - sides.count("right")) > 2:
+        problems.append(f"左右の偏りが大きい 左{sides.count('left')}/右{sides.count('right')}")
+
+    # --- クイズ以外の音は「表示した瞬間に自動再生」 ---
     for name in slides:
         if name in quiz_slides:
             continue
         root = etree.fromstring(z.read(name))
         if root.find(".//p:timing//p:cmd", NS) is None:
-            continue                                   # 音のないスライド
-        first = root.find('.//p:cTn[@nodeType="mainSeq"]/p:childTnLst/p:par/p:cTn', NS)
-        cond = first.find("p:stCondLst/p:cond", NS)
+            continue
+        cond = root.find('.//p:cTn[@nodeType="mainSeq"]/p:childTnLst/p:par/p:cTn'
+                         "/p:stCondLst/p:cond", NS)
         if cond.get("delay") != "0":
             problems.append(f"{name}: 音が自動再生になっていない (delay={cond.get('delay')})")
 
-    # 「中村になろうよ」スライドにBGMが入っているか
-    bgm_hits = [n for n in slides
-                if b"\xe4\xb8\xad\xe6\x9d\x91\xe3\x81\xab\xe3\x81\xaa\xe3\x82\x8d\xe3\x81\x86\xe3\x82\x88 BGM"
-                in z.read(n)]
-    if len(bgm_hits) != 1:
-        problems.append(f"中村になろうよのBGMが {len(bgm_hits)} 枚に入っている（1枚のはず）")
+    bgm = [n for n in slides if "中村になろうよ BGM" in z.read(n).decode()]
+    if len(bgm) != 1:
+        problems.append(f"中村になろうよのBGMが {len(bgm)} 枚に入っている（1枚のはず）")
 
-    return len(slides), problems
+    return len(slides), sides, problems
 
 
 if __name__ == "__main__":
     target = Path(sys.argv[1]) if len(sys.argv) > 1 else \
-        Path(__file__).parent / "build" / "結婚式_マルバツクイズ＆ビンゴ.pptx"
-    n, problems = check(target)
+        Path(__file__).parent / "build" / "結婚式_2択クイズ＆ビンゴ.pptx"
+    n, sides, problems = check(target)
     print(f"{target.name}: {n} 枚")
+    print("  正解の並び: " + " ".join("左" if s == "left" else "右" for s in sides)
+          + f"　(左{sides.count('left')} / 右{sides.count('right')})")
     if problems:
         for p in problems:
             print("  NG:", p)
         sys.exit(1)
-    print("  OK: 参照・アニメーション・正解位置・効果音すべて問題なし")
+    print("  OK: 参照・アニメーション・問題と答えの分離・左右の散らし・効果音すべて問題なし")
