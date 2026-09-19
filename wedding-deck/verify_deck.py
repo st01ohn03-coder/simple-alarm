@@ -70,20 +70,29 @@ def check(path):
         # 問題スライドに答えが載っていないこと
         if "正解" in qtext:
             problems.append(f"Q{i}: 問題スライドに「正解」の文字がある")
-        if q.get("layout") != "photo2":
-            for key in ("correct", "dummy"):
-                if q[key].replace(" ", "") not in qtext.replace(" ", ""):
-                    problems.append(f"Q{i}: 問題スライドに選択肢『{q[key]}』が出ていない")
-            if q["correct"].replace(" ", "") not in atext.replace(" ", ""):
-                problems.append(f"Q{i}: 答えスライドに正解『{q['correct']}』が出ていない")
+        layout = q.get("layout")
+        if layout == "live":
+            # 対決問題は勝者が当日決まるので、結果スライドに側を書いていないこと
+            for key in ("left", "right"):
+                if q[key] not in qtext:
+                    problems.append(f"Q{i}: 問題スライドに『{q[key]}』が出ていない")
+            if "正解は …" in atext:
+                problems.append(f"Q{i}: 対決問題の結果スライドに正解の側が書かれている")
+        else:
+            if layout != "photo":
+                for key in ("correct", "dummy"):
+                    if q[key].replace(" ", "") not in qtext.replace(" ", ""):
+                        problems.append(f"Q{i}: 問題スライドに選択肢『{q[key]}』が出ていない")
+                if q["correct"].replace(" ", "") not in atext.replace(" ", ""):
+                    problems.append(f"Q{i}: 答えスライドに正解『{q['correct']}』が出ていない")
 
-        # 問題＝クリック待ち、答え＝自動再生
-        # 答えスライドは正解のほかに余計な文言を載せない
-        extra = atext.replace(f"第 {i} 問　こたえ", "").replace("最終問題　こたえ", "")
-        extra = extra.replace(f'正解は …　{"左" if q["side"] == "left" else "右"} ！', "")
-        extra = extra.replace(q["correct"], "") if q.get("layout") != "photo2" else extra
-        if extra.strip():
-            problems.append(f"Q{i}: 答えスライドに余計な文言がある『{extra.strip()[:30]}』")
+            # 答えスライドは正解のほかに余計な文言を載せない
+            extra = atext.replace(f"第 {i} 問　こたえ", "").replace("最終問題　こたえ", "")
+            extra = extra.replace(f'正解は …　{"左" if q["side"] == "left" else "右"} ！', "")
+            if layout != "photo":
+                extra = extra.replace(q["correct"], "")
+            if extra.strip():
+                problems.append(f"Q{i}: 答えスライドに余計な文言がある『{extra.strip()[:30]}』")
 
         qc = qroot.find('.//p:cTn[@nodeType="mainSeq"]/p:childTnLst/p:par/p:cTn'
                         "/p:stCondLst/p:cond", NS)
@@ -105,8 +114,8 @@ def check(path):
         if nums != list(range(11)):
             problems.append(f"Q{i}: カウントダウンの数字が 0〜10 そろっていない")
 
-    # --- 正解の左右の偏り ---
-    sides = [q["side"] for q in content.QUIZ]
+    # --- 正解の左右の偏り（対決問題は当日決まるので数えない） ---
+    sides = [q["side"] for q in content.QUIZ if q.get("side")]
     if len(set(sides)) < 2:
         problems.append("正解が片側に固定されている")
     run = best = 1
@@ -117,6 +126,8 @@ def check(path):
         problems.append(f"同じ側の正解が {best} 問続いている（読まれやすい）")
     if abs(sides.count("left") - sides.count("right")) > 2:
         problems.append(f"左右の偏りが大きい 左{sides.count('left')}/右{sides.count('right')}")
+    if len(sides) > 4 and all(a != b for a, b in zip(sides, sides[1:])):
+        problems.append("正解が左右で完全に交互になっている（読まれやすい）")
 
     # --- クイズ以外の音は「表示した瞬間に自動再生」 ---
     for name in slides:
@@ -132,7 +143,7 @@ def check(path):
 
     # 写真問題は、問題スライドに2枚・答えスライドに1枚だけ写真が出ること
     for i, q in enumerate(content.QUIZ, start=1):
-        if q.get("layout") != "photo2":
+        if q.get("layout") != "photo":
             continue
         qn = f"ppt/slides/slide{FIRST_QUIZ_SLIDE + (i - 1) * 2}.xml"
         an = f"ppt/slides/slide{FIRST_QUIZ_SLIDE + (i - 1) * 2 + 1}.xml"

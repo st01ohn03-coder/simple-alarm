@@ -195,6 +195,8 @@ def add_timer(slide):
 # --------------------------------------------------------------------------
 def _choice_texts(q):
     """(左に出す文言, 右に出す文言) を返す。"""
+    if q.get("layout") == "live":
+        return q["left"], q["right"]
     if q["side"] == "left":
         return q["correct"], q["dummy"]
     return q["dummy"], q["correct"]
@@ -202,7 +204,7 @@ def _choice_texts(q):
 
 def _photo_name(q, side):
     """その側に出す写真のファイル名。"""
-    return content.PHOTO2["correct" if side == q["side"] else "dummy"]
+    return q["photos"]["correct" if side == q["side"] else "dummy"]
 
 
 def _photo_pic(slide, name, x, y, cx, cy, side):
@@ -216,7 +218,7 @@ def quiz_question_slide(prs, audio, index, q):
     """問題だけを出すスライド。答えは一切載せない。"""
     slide = prs.slides.add_slide(prs.slide_layouts[6])
     add_bg(slide, "bg_quiz.png")
-    photo = q.get("layout") == "photo2"
+    photo = q.get("layout") == "photo"
 
     badge = rounded(slide, BADGE["x"], BADGE["y"], BADGE["cx"], BADGE["cy"], DEEP, GOLD, 3, 0.5)
     fill_shape_text(badge, [("最終問題" if q.get("final") else f"第 {index} 問", 26, True, WHITE)])
@@ -258,15 +260,47 @@ def quiz_question_slide(prs, audio, index, q):
     apply_transition(slide, "fade")
     apply_timing(slide, tl)
 
+    if q.get("layout") == "live":
+        lines = [
+            f"【第{index}問】その場で勝負する対決問題",
+            "① 挑戦のお二人に前へ出ていただき、左右に分かれて立ってもらう",
+            "② クリック → 10秒カウントダウン。どちらが勝つと思うかで会場に移動していただく",
+            "③ 勝負！ 終わったらクリックして結果のスライドへ",
+        ]
+    else:
+        lines = [
+            f"【第{index}問】問題スライド（答えは次のスライド）",
+            f'正解：{SIDE_JP[q["side"]]} 「{q["correct"]}」',
+            "① 問題と左右の答えを読み上げる",
+            "② クリック → 10秒カウントダウン（BGMが鳴ります）。会場の皆さまに移動していただく",
+            "③ クリック → 答えのスライドへ",
+        ]
+    add_notes(slide, "\n".join(lines + ["", q.get("note", "")]).strip())
+    return slide
+
+
+def _live_result_slide(prs, audio, slide, index, q):
+    """対決問題の結果スライド。勝者は当日決まるので、どちら側とは書かない。"""
+    badge = rounded(slide, A_BADGE["x"], A_BADGE["y"], A_BADGE["cx"], A_BADGE["cy"],
+                    DEEP, GOLD, 3, 0.5)
+    fill_shape_text(badge, [(f"第 {index} 問　けっか", 24, True, WHITE)])
+
+    label = textbox(slide, 900000, 1900000, 10392000, 1200000, [("勝負あり！", 54, True, DEEP)])
+    panel = rounded(slide, 2596000, 3450000, 7000000, 1500000, WHITE, GOLD, 5, 0.2)
+    fill_shape_text(panel, [("勝った方に立っていた方が正解です👏", 26, True, INK)])
+
+    spid, dur = audio.add(slide, str(SFX / "sfx_answer.mp3"), "正解発表効果音", _next_id(slide))
+    tl = Timeline()
+    tl.group(auto=True).play(spid, dur).appear(label.shape_id).appear(panel.shape_id) \
+                       .pulse(panel.shape_id)
+    apply_transition(slide, "fade")
+    apply_timing(slide, tl)
     add_notes(slide, "\n".join([
-        f"【第{index}問】問題スライド（答えは次のスライド）",
-        f'正解：{SIDE_JP[q["side"]]} 「{q["correct"]}」',
-        "① 問題と左右の答えを読み上げる",
-        "② クリック → 10秒カウントダウン（BGMが鳴ります）。会場の皆さまに移動していただく",
-        "③ クリック → 答えのスライドへ",
-        "",
-        q.get("note", ""),
-    ]).strip())
+        f"【第{index}問】対決の結果",
+        "勝負がついてからこのスライドを出してください。",
+        "表示した瞬間に効果音が鳴ります（クリック不要）。",
+        "勝った側に立っていた方が勝ち残り、という進行です。",
+    ]))
     return slide
 
 
@@ -274,7 +308,11 @@ def quiz_answer_slide(prs, audio, index, q):
     """答えだけを出すスライド。開いた瞬間にファンファーレが鳴る。"""
     slide = prs.slides.add_slide(prs.slide_layouts[6])
     add_bg(slide, "bg_quiz.png")
-    photo = q.get("layout") == "photo2"
+
+    if q.get("layout") == "live":
+        return _live_result_slide(prs, audio, slide, index, q)
+
+    photo = q.get("layout") == "photo"
     side = q["side"]
 
     badge = rounded(slide, A_BADGE["x"], A_BADGE["y"], A_BADGE["cx"], A_BADGE["cy"],
@@ -287,7 +325,7 @@ def quiz_answer_slide(prs, audio, index, q):
 
     reveals = []
     if photo:
-        pic = _photo_pic(slide, content.PHOTO2["correct"], A2_PHOTO["x"], A2_PHOTO["y"],
+        pic = _photo_pic(slide, q["photos"]["correct"], A2_PHOTO["x"], A2_PHOTO["y"],
                          A2_PHOTO["cx"], A2_PHOTO["cy"], side)
         # 矢印は写真の外側。正解が左なら左、右なら右を指す
         if side == "left":

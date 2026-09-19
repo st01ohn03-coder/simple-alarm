@@ -16,35 +16,44 @@ QUIZ = [
         correct="森月子 さん",
         dummy="森下 詩織 さん",
         side="right",
-        note="ダミーのお名前は、ご列席者と被らないものにしてください。"
-             "お名前の漢字・読みもご確認を。",
+        note="ダミーは仮で『森下 詩織』さんにしています。"
+             "ご列席者と被る場合は content.py の dummy を差し替えてください。",
     ),
     dict(
         q="今日、日本に直撃している\n台風は何号？",
-        correct="台風 18 号",
-        dummy="台風 17 号",
+        correct="台風 25 号",
+        dummy="台風 24 号",
         side="left",
-        note="正解は台風18号。ダミーは一つ前の17号にしています。",
+        note="正解は台風25号。ダミーは一つ前の24号にしています。",
     ),
     dict(
-        q="新郎新婦が1番最近\nSEXしたのは？",
-        correct="1週間以内",
-        dummy="1週間より前",
-        side="left",
-        note="正解が「1週間より前」の場合は、correct と dummy を入れ替えてください。"
-             "やわらげたい場合は『最後にハグしたのは？』でも同じ構成で使えます。",
+        q="【男性代表】一気飲み対決！\n先に飲み干すのはどっち？",
+        layout="live",
+        left="挑戦者 ①",
+        right="挑戦者 ②",
+        note="男性2名に前へ出ていただき、左右に分かれて立ってもらいます。"
+             "カウントダウンのあいだに会場の皆さまに移動していただき、そのあと勝負。"
+             "お名前を出す場合は content.py の left / right を書き換えてください。"
+             "お酒が飲めない方にはソフトドリンクでご用意を。",
+    ),
+    dict(
+        q="【女性代表】一気飲み対決！\n先に飲み干すのはどっち？",
+        layout="live",
+        left="挑戦者 ①",
+        right="挑戦者 ②",
+        note="男性代表と同じ進行の女性版です。",
     ),
     dict(
         q="初めてのデートで\n新郎がやらかした失敗は？",
         correct="待ち合わせに1時間も遅刻",
         dummy="飲み物を新婦の服にこぼした",
-        side="right",
+        side="left",
     ),
     dict(
         q="新婦が新郎に『これだけは\nやめてほしい』と思っている癖は？",
         correct="酔って帰ってきてのダル絡み",
         dummy="いびきがうるさい",
-        side="left",
+        side="right",
     ),
     dict(
         q="喧嘩したとき\n新郎が必ずすることは？",
@@ -56,40 +65,49 @@ QUIZ = [
         q="新婦が思う『新郎の手料理で\n一番おいしいもの』は？",
         correct="参鶏湯（サムゲタン）",
         dummy="ガパオライス",
-        side="right",
+        side="left",
     ),
     dict(
         q="スクリーンに映っている幼少期の写真\n新郎はどっち？",
         correct="こちら",
         dummy="こちら",
+        side="right",
+        layout="photo",
+        photos=dict(correct="q_child_real.jpg", dummy="q_child_ai.jpg"),
+        note="口を開けている方（髪が立っている方）が正解。",
+    ),
+    dict(
+        q="新婦が実際に撮影した写真は\nどっち？",
+        correct="こちら",
+        dummy="こちら",
         side="left",
-        layout="photo2",
-        note="口を開けている方（髪が立っている方）が正解。"
-             "side を変えると写真も一緒に左右入れ替わります。",
+        layout="photo",
+        photos=dict(correct="q_now_real.jpg", dummy="q_now_ai.jpg"),
+        note="カルピスを持っている方が本物。ワインの方はAIで作った写真です。",
     ),
     dict(
         q="新郎新婦が入籍前に\nやらかしたエピソードは？",
         correct="新郎が社員旅行で左手の薬指を負傷",
         dummy="新婦が婚約指輪を落として無くした",
-        side="right",
+        side="left",
     ),
     dict(
         q="ドラマが苦手な新郎が、新婦と\n唯一最後まで見られたドラマは？",
         correct="ロイヤルファミリー",
         dummy="VIVANT",
-        side="left",
+        side="right",
     ),
     dict(
         q="新郎が新婦に\nやめてほしいことは？",
         correct="酔って帰ってきたら、そのまま床で寝ること",
         dummy="朝の目覚ましの音が大きすぎること",
-        side="right",
+        side="left",
     ),
     dict(
         q="新婦が『新郎と出会ってよかった』と\n思っていることは？",
         correct="太らない食生活を手に入れたこと",
         dummy="新しい趣味が増えたこと",
-        side="left",
+        side="right",
     ),
     dict(
         q="新郎新婦が\n今いちばん欲しいものは？",
@@ -100,11 +118,6 @@ QUIZ = [
     ),
 ]
 
-# 幼少期の写真くらべ。正解側＝口を開けている方。
-PHOTO2 = dict(correct="q_child_real.jpg", dummy="q_child_ai.jpg")
-
-# 使っていない予備。カルピス／ワインの2枚で「本物 vs AI生成」の問題も作れる。
-SPARE_PHOTOS = dict(real="q_now_real.jpg", ai="q_now_ai.jpg")
 
 # ---------------------------------------------------------------- 二次会の進行
 PARTY_TITLE = "中村家 結婚二次会"
