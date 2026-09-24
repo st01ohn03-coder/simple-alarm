@@ -14,7 +14,8 @@ ASIN **B0FVFTZSM7** 向けの商品動画。HTML/CSS/JS でアニメーション
 
 出力先: `dist/`
 
-- [`docs/PLAYBOOK.md`](docs/PLAYBOOK.md) — **別の人・別の商品で同じ品質を出すために何が要るか**
+- [`docs/HANDOVER.md`](docs/HANDOVER.md) — **引き継ぎ書。いまの状態・決定の理由・申し送り**
+- [`docs/PLAYBOOK.md`](docs/PLAYBOOK.md) — 別の人・別の商品で同じ品質を出すために何が要るか
 - [`docs/WORKFLOW.md`](docs/WORKFLOW.md) — 制作フロー。他の商品で回すときの手順もここ
 - [`docs/ANALYSIS.md`](docs/ANALYSIS.md) — 商品ページ・A+ の分析と、動画構成の根拠
 - [`docs/SCRIPT.md`](docs/SCRIPT.md) — 絵コンテ・台本・ナレーション原稿
