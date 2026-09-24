@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<!-- ここは画面に出ないので、商品名を入れても検品には引っかかりません -->
+<title>商品動画</title>
+<link rel="stylesheet" href="fonts/fonts.css">
+<link rel="stylesheet" href="theme.css">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<!--
+  ============================================================
+  これは雛形です。BRIEF.md を埋めてから、この中の文言・画像・
+  シーン構成を商品に合わせて書き換えてください。
+
+  ・見出しの大きさは style="--fs:4.9rem" で指定します。
+    インラインの font-size にすると 1:1 版で縮められなくなります。
+  ・シーンの長さは src/timeline.js の SCENES で決めます。
+  ・ナレーション原稿は tools/narration.py の LINES です。
+  ・画像は src/assets/ に置き、ここから参照します。
+
+  構成の意図は references/example.md（スキル同梱）を読んでください。
+  ============================================================
+-->
+<div id="stage">
+
+  <!-- ============ S1 フック：何の動画かを1秒で分からせ、悩みを4つ出す ============ -->
+  <section class="scene" id="s1">
+    <div class="bg bg-grad-navy"></div>
+    <div class="grid-lines"></div>
+    <div class="stripe" id="s1stripe" style="left:-10rem; top:22rem; width:52rem; transform:rotate(-24deg);"></div>
+    <div class="stripe" id="s1stripe2" style="right:-12rem; bottom:20rem; width:44rem; transform:rotate(-24deg); opacity:.35;"></div>
+    <h1 class="headline" id="s1h">ここに短い問いかけ、<br>二行で。</h1>
+    <div class="chips" id="s1chips">
+      <div class="chip"><span class="x">✕</span>できない悩み その1</div>
+      <div class="chip"><span class="x">✕</span>できない悩み その2</div>
+      <div class="chip"><span class="x">✕</span>できない悩み その3</div>
+      <div class="chip"><span class="x">✕</span>できない悩み その4</div>
+    </div>
+  </section>
+
+  <!-- ============ S2 製品提示：探していたものだと確認させる ============ -->
+  <section class="scene" id="s2">
+    <div class="bg bg-grad-blue"></div>
+    <div class="grid-lines" style="opacity:.10"></div>
+    <div class="reveal" id="s2reveal">
+      <div class="pkg-wrap" id="s2pkgwrap">
+        <img class="pkg" src="assets/pkg.jpg" alt="商品パッケージ">
+      </div>
+      <div class="reveal-txt">
+        <div class="brandline" id="s2brand">BRAND</div>
+        <div class="prodname" id="s2name">商品名<span class="ver">Ver.0</span></div>
+        <div class="edition" id="s2ed">EDITION</div>
+        <div class="tagchips" id="s2tags">
+          <span class="tag" style="background:var(--red)">特長1</span>
+          <span class="tag" style="background:var(--orange);color:var(--on-orange)">特長2</span>
+          <span class="tag" style="background:var(--green)">特長3</span>
+          <span class="tag" style="background:var(--blue-d)">特長4</span>
+          <span class="tag" style="background:var(--purple)">特長5</span>
+          <span class="tag" style="background:rgba(255,255,255,.22)">＋α</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ S3 基本機能：自分の用途に足りるかを実画面で判断させる ============ -->
+  <section class="scene" id="s3">
+    <div class="bg bg-grad-navy"></div>
+    <div class="eyebrow" id="s3eye">小見出しをここに</div>
+    <h2 class="headline" id="s3h" style="--fs:4.9rem">主な用途は、だいたい<span class="hl-b">これ</span>で足りる。</h2>
+    <div class="fgrid" id="s3grid">
+      <div class="fcard">
+        <img class="shot" src="assets/shot_1.jpg" alt="">
+        <div class="fbody">
+          <span class="fno" style="background:var(--red)">1</span>
+          <h3>機能その1</h3>
+          <p>何ができるかを一文で。二行に収める。</p>
+        </div>
+      </div>
+      <div class="fcard">
+        <img class="shot" src="assets/shot_2.jpg" alt="">
+        <div class="fbody">
+          <span class="fno" style="background:var(--orange);color:var(--on-orange)">2</span>
+          <h3>機能その2</h3>
+          <p>何ができるかを一文で。二行に収める。</p>
+        </div>
+      </div>
+      <div class="fcard">
+        <img class="shot" src="assets/shot_3.jpg" alt="">
+        <div class="fbody">
+          <span class="fno" style="background:var(--green)">3</span>
+          <h3>機能その3</h3>
+          <p>何ができるかを一文で。二行に収める。</p>
+        </div>
+      </div>
+      <div class="fcard">
+        <img class="shot" src="assets/shot_4.jpg" alt="">
+        <div class="fbody">
+          <span class="fno" style="background:var(--blue-d)">4</span>
+          <h3>機能その4</h3>
+          <p>何ができるかを一文で。二行に収める。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ S4 上位版の理由①：この版を選ぶ理由を実画面で ============ -->
+  <section class="scene" id="s4">
+    <div class="bg bg-grad-navy"></div>
+    <div class="splitwrap" id="s4split">
+      <div class="splitL">
+        <div class="onlybar" id="s4only"><span class="dot"></span>この版だけの機能</div>
+        <h2 class="headline left" id="s4h" style="--fs:4.1rem">いちばんの差を、<br><span class="hl">短く言い切る</span>。</h2>
+        <div class="sub left" id="s4sub">補足を一行か二行で。<br>言い訳がましくならない範囲で。</div>
+      </div>
+      <div class="splitR">
+        <div class="shotstage">
+          <div class="shotframe" id="s4frame">
+            <img src="assets/shot_main.jpg" alt="操作画面">
+            <!-- 枠と吹き出しの位置は画像に合わせて % で調整します -->
+            <div class="spot" id="s4spot" style="left:51.5%; top:63%; width:17%; height:29%;"></div>
+            <div class="callout" id="s4call" style="left:34%; top:40%;">ここが差</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ S5 上位版の理由②：不安を潰す要素を4つ ============ -->
+  <section class="scene" id="s5">
+    <div class="bg bg-grad-navy"></div>
+    <div class="onlybar" id="s5only"><span class="dot"></span>この版だけの機能</div>
+    <h2 class="headline" id="s5h" style="--fs:4.9rem">短い対句で。<span class="hl">印象に残す</span>。</h2>
+    <div class="secrow" id="s5row">
+      <div class="seccard">
+        <svg class="icn" viewBox="0 0 64 64" fill="none"><rect x="8" y="12" width="48" height="40" rx="4" fill="#fff" opacity=".12"/><rect x="8" y="12" width="48" height="40" rx="4" stroke="#5FD2FF" stroke-width="3"/><rect x="15" y="21" width="34" height="5" rx="2" fill="#5FD2FF"/><rect x="15" y="31" width="26" height="9" rx="1.5" fill="#0B1220"/><rect x="15" y="31" width="26" height="9" rx="1.5" stroke="#E23C2E" stroke-width="2.5"/></svg>
+        <h4>要素1</h4><p>一行で説明する</p>
+      </div>
+      <div class="seccard">
+        <svg class="icn" viewBox="0 0 64 64" fill="none"><path d="M14 46c10-18 18-24 22-24s4 8-2 14 2 6 8 0" stroke="#5FD2FF" stroke-width="4" stroke-linecap="round"/><path d="M10 54h44" stroke="#fff" stroke-width="3.5" stroke-linecap="round" opacity=".55"/><circle cx="48" cy="18" r="9" stroke="#F5B21A" stroke-width="3.5"/><path d="M44 18l3 3 5-6" stroke="#F5B21A" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <h4>要素2</h4><p>一行で説明する</p>
+      </div>
+      <div class="seccard">
+        <svg class="icn" viewBox="0 0 64 64" fill="none"><circle cx="32" cy="32" r="20" stroke="#5FD2FF" stroke-width="3.5"/><path d="M32 20v13l9 6" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M46 10l8 6M18 10l-8 6" stroke="#F5B21A" stroke-width="3.5" stroke-linecap="round"/></svg>
+        <h4>要素3</h4><p>一行で説明する</p>
+      </div>
+      <div class="seccard">
+        <svg class="icn" viewBox="0 0 64 64" fill="none"><rect x="14" y="28" width="36" height="26" rx="4" fill="#fff" opacity=".12"/><rect x="14" y="28" width="36" height="26" rx="4" stroke="#5FD2FF" stroke-width="3.5"/><path d="M22 28v-8a10 10 0 0120 0v8" stroke="#F5B21A" stroke-width="3.5" stroke-linecap="round"/><circle cx="32" cy="40" r="4" fill="#5FD2FF"/></svg>
+        <h4>要素4</h4><p>一行で説明する</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ S6 新しさ：買い替え動機。無ければ別の訴求に差し替える ============ -->
+  <section class="scene" id="s6">
+    <div class="bg bg-grad-blue"></div>
+    <div class="grid-lines" style="opacity:.10"></div>
+    <div class="newbadge" id="s6new">新機能</div>
+    <h2 class="headline" id="s6h" style="--fs:4.9rem">変化を、<span class="hl">一息で</span>言う。</h2>
+    <div class="sub" id="s6sub">何がどう変わるのかを一行で</div>
+    <div class="steps" id="s6steps">
+      <div class="step"><div class="sn">1</div><div><h4>手順1</h4><p>短く説明する</p></div></div>
+      <div class="arrowdot">›</div>
+      <div class="step"><div class="sn">2</div><div><h4>手順2</h4><p>短く説明する</p></div></div>
+      <div class="arrowdot">›</div>
+      <div class="step"><div class="sn">3</div><div><h4>手順3</h4><p>短く説明する</p></div></div>
+    </div>
+  </section>
+
+  <!-- ============ S7 コスト：価格は出さず、支払いの構造だけを見せる ============ -->
+  <section class="scene" id="s7">
+    <div class="bg bg-grad-navy"></div>
+    <div class="eyebrow" id="s7eye">コストの考え方</div>
+    <h2 class="headline" id="s7h" style="--fs:4.4rem">他は、毎年払う。<br>これは、<span class="hl">1回だけ</span>。</h2>
+    <div class="costwrap" id="s7cost">
+      <div class="costcol">
+        <div class="bars" id="s7subbars"></div>
+        <div class="costlabel"><div class="cl1">毎年払う方式</div><div class="cl2">使い続けるかぎり支払いが続く</div></div>
+      </div>
+      <div class="vs" id="s7vs">VS</div>
+      <div class="costcol">
+        <div class="bars" id="s7oncebars"></div>
+        <div class="costlabel"><div class="cl1 win">この商品</div><div class="cl2">支払いは最初の1回だけ</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ S8 クロージング：実績と、買ってから違ったと思わせない仕様 ============ -->
+  <section class="scene" id="s8">
+    <div class="bg bg-grad-blue"></div>
+    <div class="grid-lines" style="opacity:.10"></div>
+    <div class="reveal" id="s8reveal" style="gap:4rem">
+      <div class="pkg-wrap" id="s8pkgwrap">
+        <img class="pkg" src="assets/pkg.jpg" alt="" style="width:20rem;height:20rem">
+      </div>
+      <div class="reveal-txt">
+        <div class="prodname" style="--fs:4.4rem;font-size:4.4rem">商品名<span class="ver" style="font-size:2.7rem">Ver.0</span></div>
+        <div class="edition" style="font-size:2.7rem">EDITION</div>
+      </div>
+    </div>
+    <!-- 実績を出すなら、注記（調査主体・対象・期間）を timeline.js の NOTE に書く -->
+    <div class="proofrow" id="s8proof">
+      <div class="proof"><div class="pv">実績1</div><div class="pl">何の数字か<span style="font-weight:400">※1</span></div></div>
+      <div class="proof"><div class="pv">実績2</div><div class="pl">何の数字か<span style="font-weight:400">※2</span></div></div>
+      <div class="proof"><div class="pv">実績3</div><div class="pl">何の数字か<span style="font-weight:400">※2</span></div></div>
+    </div>
+    <!-- 買ってから違ったと思わせないための仕様。隠さず出す -->
+    <div class="speclist" id="s8specs">
+      <span class="spec">対応環境</span>
+      <span class="spec">数量・台数</span>
+      <span class="spec">提供形態</span>
+    </div>
+  </section>
+
+  <div class="notes" id="notes"></div>
+  <div class="wipe" id="wipe" style="opacity:0"></div>
+</div>
+
+<script src="timeline.js"></script>
+</body>
+</html>

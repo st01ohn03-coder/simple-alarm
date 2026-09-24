@@ -1,0 +1,114 @@
+{
+  "_comment": "この動画プロジェクトの設定。ツールはすべてここを読む。別の商品で作るときは tools/new-project.js が新しい project.json を書く。",
+  "product": {
+    "asin": "",
+    "slug": "product-video",
+    "name": "",
+    "brand": "",
+    "marketplace": "amazon.co.jp",
+    "locale": "ja-JP"
+  },
+  "theme": {
+    "_comment": "src/theme.css に書き出される。値を変えたら node tools/apply-config.js",
+    "colors": {
+      "navy": "#061024",
+      "navy2": "#0B1C36",
+      "navy3": "#12294B",
+      "blue": "#0086CC",
+      "blue-d": "#0460B5",
+      "blue-l": "#38B6F0",
+      "cyan": "#5FD2FF",
+      "gold": "#F5B21A",
+      "gold-l": "#FFD873",
+      "red": "#D63528",
+      "green": "#1E864D",
+      "orange": "#F49807",
+      "purple": "#986497",
+      "ink": "#0B1220",
+      "paper": "#F4F7FB",
+      "mute": "#8FA5C0",
+      "body": "#DCEAF8",
+      "body-dim": "#CFE2F4",
+      "on-orange": "#2A1A00",
+      "on-blue": "#DCF1FF"
+    },
+    "font": {
+      "family": "Noto Sans JP",
+      "googleName": "Noto+Sans+JP",
+      "weights": [
+        400,
+        500,
+        700,
+        900
+      ]
+    }
+  },
+  "video": {
+    "fps": 30,
+    "crf": 18,
+    "jpegQuality": 96,
+    "presets": {
+      "16x9": {
+        "w": 1920,
+        "h": 1080,
+        "suffix": "16x9_1080p"
+      },
+      "1x1": {
+        "w": 1080,
+        "h": 1080,
+        "suffix": "1x1_1080"
+      },
+      "9x16": {
+        "w": 1080,
+        "h": 1920,
+        "suffix": "9x16_1080"
+      }
+    },
+    "deliverables": [
+      "16x9",
+      "1x1"
+    ],
+    "_comment": "deliverables が検品と納品の対象。presets にはあっても deliverables に無いものは検品しない。"
+  },
+  "narration": {
+    "enabled": true,
+    "voice": "ja-JP-NanamiNeural",
+    "rate": "+6%",
+    "lead": 0.45,
+    "tailMargin": 0.3,
+    "clipLufs": -19.0,
+    "targetLufs": -16.0,
+    "music": {
+      "enabled": true,
+      "db": -19.0
+    }
+  },
+  "qa": {
+    "_comment": "入稿先が変わったらここを直す。値の意味は docs/WORKFLOW.md の⑥。",
+    "overflowPx": 40,
+    "lufs": [
+      -17.0,
+      -15.0
+    ],
+    "truePeakMax": -1.0,
+    "avSkewSec": 0.15,
+    "minFps": 23.976,
+    "minHeight": 720,
+    "maxFileMB": 500,
+    "minContrast": 4.5,
+    "safeMarginPct": 4.0,
+    "minFontPctH": 1.7,
+    "minSmallFontPctH": 1.05,
+    "smallTextSelectors": [
+      ".notes"
+    ],
+    "minContrastLarge": 3.0,
+    "largeTextPx": 32
+  },
+  "compliance": {
+    "_comment": "profile は docs/compliance/*.json のファイル名。プロジェクト固有の追加はここに書く。",
+    "profile": "amazon-jp",
+    "competitorNames": [],
+    "allowedClaims": []
+  }
+}
