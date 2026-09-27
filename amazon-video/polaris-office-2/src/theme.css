@@ -1,0 +1,24 @@
+/* project.json の theme.colors から生成。直接編集しないこと。
+   作り直す: node tools/apply-config.js */
+:root{
+  --navy:      #061024;
+  --navy2:     #0B1C36;
+  --navy3:     #12294B;
+  --blue:      #0086CC;
+  --blue-d:    #0460B5;
+  --blue-l:    #38B6F0;
+  --cyan:      #5FD2FF;
+  --gold:      #F5B21A;
+  --gold-l:    #FFD873;
+  --red:       #D63528;
+  --green:     #1E864D;
+  --orange:    #F49807;
+  --purple:    #986497;
+  --ink:       #0B1220;
+  --paper:     #F4F7FB;
+  --mute:      #8FA5C0;
+  --body:      #DCEAF8;
+  --body-dim:  #CFE2F4;
+  --on-orange: #2A1A00;
+  --on-blue:   #DCF1FF;
+}

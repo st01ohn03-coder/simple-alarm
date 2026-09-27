@@ -126,6 +126,7 @@
   var subBars = [], onceBars = [];
   (function buildBars() {
     var host = $('s7subbars');
+    if (!host) return;   // S7 を棒グラフ以外の作りにしたプロジェクト
     var years = ['1年目', '2年目', '3年目', '4年目', '5年目'];
     years.forEach(function (y, i) {
       var d = document.createElement('div');
@@ -136,6 +137,7 @@
       subBars.push(d);
     });
     var h2 = $('s7oncebars');
+    if (!h2) return;
     var d2 = document.createElement('div');
     d2.className = 'bar once';
     d2.style.height = '3.0rem';
@@ -273,24 +275,36 @@
   function sceneS7(τ) {
     rise($('s7eye'), τ, 0.08, 0.42, 1.4);
     typeIn(CH.s7h, τ, 0.22, 0.024, 0.32);
-    // サブスクの棒が毎年積み上がる
-    subBars.forEach(function (b, i) {
-      var st = 0.95 + i * 0.20;
-      var kk = easeBack(span(τ, st, st + 0.44));
-      b.style.opacity = clamp(span(τ, st, st + 0.20), 0, 1);
-      b.style.transform = 'scaleX(' + lerp(0.55, 1, clamp(kk, 0, 1.2)) + ')';
-    });
-    // 買い切りは1本だけ
-    var ko = easeBack(span(τ, 1.05, 1.55));
-    onceBars[0].style.opacity = clamp(span(τ, 1.05, 1.28), 0, 1);
-    onceBars[0].style.transform = 'scaleX(' + lerp(0.55, 1, clamp(ko, 0, 1.2)) + ')';
-    // VS
-    var kv = easeBack(span(τ, 0.80, 1.25));
-    $('s7vs').style.opacity = clamp(span(τ, 0.80, 1.02), 0, 1);
-    $('s7vs').style.transform = 'scale(' + lerp(0.5, 1, clamp(kv, 0, 1.3)) + ')';
-    // ラベル
-    var cls = $('s7cost').querySelectorAll('.costlabel');
-    for (var i = 0; i < cls.length; i++) rise(cls[i], τ, 2.05 + i * 0.12, 0.45, 1.4);
+    rise($('s7sub'), τ, 0.85, 0.5, 1.6);
+
+    if (subBars.length) {
+      // 支払い比較の作り：棒が年ごとに積み上がる
+      subBars.forEach(function (b, i) {
+        var st = 0.95 + i * 0.20;
+        var kk = easeBack(span(τ, st, st + 0.44));
+        b.style.opacity = clamp(span(τ, st, st + 0.20), 0, 1);
+        b.style.transform = 'scaleX(' + lerp(0.55, 1, clamp(kk, 0, 1.2)) + ')';
+      });
+      var ko = easeBack(span(τ, 1.05, 1.55));
+      onceBars[0].style.opacity = clamp(span(τ, 1.05, 1.28), 0, 1);
+      onceBars[0].style.transform = 'scaleX(' + lerp(0.55, 1, clamp(ko, 0, 1.2)) + ')';
+      var kv = easeBack(span(τ, 0.80, 1.25));
+      if ($('s7vs')) {
+        $('s7vs').style.opacity = clamp(span(τ, 0.80, 1.02), 0, 1);
+        $('s7vs').style.transform = 'scale(' + lerp(0.5, 1, clamp(kv, 0, 1.3)) + ')';
+      }
+      var cls = $('s7cost') ? $('s7cost').querySelectorAll('.costlabel') : [];
+      for (var i = 0; i < cls.length; i++) rise(cls[i], τ, 2.05 + i * 0.12, 0.45, 1.4);
+    } else {
+      // 棒グラフを使わない作り：中のカードを順に出す
+      var cards = $('s7').querySelectorAll('.seccard, .proof, .step, .fcard');
+      for (var j = 0; j < cards.length; j++) {
+        var st2 = 0.85 + j * 0.16;
+        var kk2 = easeOutQuint(span(τ, st2, st2 + 0.58));
+        cards[j].style.opacity = clamp(span(τ, st2, st2 + 0.26), 0, 1);
+        cards[j].style.transform = 'translate3d(0,' + lerp(3.6, 0, kk2) + 'rem,0) scale(' + lerp(0.94, 1, kk2) + ')';
+      }
+    }
   }
 
   function sceneS8(τ) {

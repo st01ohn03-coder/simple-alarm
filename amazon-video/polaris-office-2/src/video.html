@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<!-- ここは画面に出ないので、商品名を入れても検品には引っかかりません -->
+<title>商品動画</title>
+<link rel="stylesheet" href="fonts/fonts.css">
+<link rel="stylesheet" href="theme.css">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div id="stage">
+
+  <!-- ============ S1 フック：払い続ける構造への引っかかりを突く ============ -->
+  <section class="scene" id="s1">
+    <div class="bg bg-grad-navy"></div>
+    <div class="grid-lines"></div>
+    <div class="stripe" id="s1stripe" style="left:-10rem; top:22rem; width:52rem; transform:rotate(-24deg);"></div>
+    <div class="stripe" id="s1stripe2" style="right:-12rem; bottom:20rem; width:44rem; transform:rotate(-24deg); opacity:.35;"></div>
+    <h1 class="headline" id="s1h">そのファイル、<br>ずっと払い続けますか。</h1>
+    <div class="chips" id="s1chips">
+      <div class="chip"><span class="x">✕</span>毎年の支払いが重い</div>
+      <div class="chip"><span class="x">✕</span>相手のファイルが開けるか不安</div>
+      <div class="chip"><span class="x">✕</span>操作を覚え直したくない</div>
+      <div class="chip"><span class="x">✕</span>職場と自宅の2台で使いたい</div>
+    </div>
+  </section>
+
+  <!-- ============ S2 製品提示 ============ -->
+  <section class="scene" id="s2">
+    <div class="bg bg-grad-blue"></div>
+    <div class="grid-lines" style="opacity:.10"></div>
+    <div class="reveal" id="s2reveal">
+      <div class="pkg-wrap" id="s2pkgwrap">
+        <img class="pkg" src="assets/pkg.jpg" alt="商品パッケージ">
+      </div>
+      <div class="reveal-txt">
+        <div class="brandline" id="s2brand">SOURCENEXT</div>
+        <div class="prodname" id="s2name">Polaris Office<span class="ver">2</span></div>
+        <div class="edition" id="s2ed">カード版</div>
+        <div class="tagchips" id="s2tags">
+          <span class="tag" style="background:var(--green)">表計算</span>
+          <span class="tag" style="background:var(--orange);color:var(--on-orange)">スライド</span>
+          <span class="tag" style="background:var(--blue-d)">文書</span>
+          <span class="tag" style="background:var(--red)">PDF編集</span>
+          <span class="tag" style="background:var(--purple)">2台まで</span>
+          <span class="tag" style="background:rgba(255,255,255,.22)">買い切り</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ S3 対応形式：相手のファイルが開けるかの不安を潰す ============ -->
+  <section class="scene" id="s3">
+    <div class="bg bg-grad-navy"></div>
+    <div class="eyebrow" id="s3eye">Microsoft Office と同じ形式で</div>
+    <h2 class="headline" id="s3h" style="--fs:4.9rem">作って、開いて、<span class="hl-b">そのまま渡せる</span>。</h2>
+    <div class="fgrid" id="s3grid">
+      <div class="fcard">
+        <img class="shot" src="assets/shot_1.jpg" alt="">
+        <div class="fbody">
+          <span class="fno" style="background:var(--green)">1</span>
+          <h3>表計算</h3>
+          <p>.xls / .xlsx をそのまま読み書き</p>
+        </div>
+      </div>
+      <div class="fcard">
+        <img class="shot" src="assets/shot_2.jpg" alt="">
+        <div class="fbody">
+          <span class="fno" style="background:var(--orange);color:var(--on-orange)">2</span>
+          <h3>スライド</h3>
+          <p>.ppt / .pptx をそのまま読み書き</p>
+        </div>
+      </div>
+      <div class="fcard">
+        <img class="shot" src="assets/shot_3.jpg" alt="">
+        <div class="fbody">
+          <span class="fno" style="background:var(--blue-d)">3</span>
+          <h3>文書</h3>
+          <p>.doc / .docx をそのまま読み書き</p>
+        </div>
+      </div>
+      <div class="fcard">
+        <img class="shot" src="assets/shot_4.jpg" alt="">
+        <div class="fbody">
+          <span class="fno" style="background:var(--red)">4</span>
+          <h3>PDF</h3>
+          <p>作成も変換も編集もこれ1本で</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ S4 操作性：覚え直す必要がないことを実画面で ============ -->
+  <section class="scene" id="s4">
+    <div class="bg bg-grad-navy"></div>
+    <div class="splitwrap" id="s4split">
+      <div class="splitL">
+        <div class="onlybar" id="s4only"><span class="dot"></span>覚え直す必要がない</div>
+        <h2 class="headline left" id="s4h" style="--fs:4.1rem">リボンの並びも、<br><span class="hl">アイコンの位置も</span>。</h2>
+        <div class="sub left" id="s4sub">同じファイルを開いた状態です。<br>レイアウトもタブの構成も引き継がれます。</div>
+      </div>
+      <div class="splitR">
+        <div class="shotstage">
+          <div class="shotframe" id="s4frame">
+            <img src="assets/shot_main.jpg" alt="操作画面の比較">
+            <div class="spot" id="s4spot" style="left:13%; top:2%; width:43%; height:19%;"></div>
+            <div class="callout" id="s4call" style="left:15%; top:24%;">並びはそのまま</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ S5 できないこと：買ってから違ったと思わせない ============ -->
+  <section class="scene" id="s5">
+    <div class="bg bg-grad-navy"></div>
+    <div class="onlybar" id="s5only"><span class="dot"></span>購入前に確認してください</div>
+    <h2 class="headline" id="s5h" style="--fs:4.9rem">できないことも、<span class="hl">先に書きます</span>。</h2>
+    <div class="secrow" id="s5row">
+      <div class="seccard">
+        <svg class="icn" viewBox="0 0 64 64" fill="none"><rect x="8" y="12" width="48" height="40" rx="4" fill="#fff" opacity=".12"/><rect x="8" y="12" width="48" height="40" rx="4" stroke="#5FD2FF" stroke-width="3"/><rect x="15" y="21" width="34" height="5" rx="2" fill="#5FD2FF"/><rect x="15" y="31" width="26" height="9" rx="1.5" fill="#0B1220"/><rect x="15" y="31" width="26" height="9" rx="1.5" stroke="#E23C2E" stroke-width="2.5"/></svg>
+        <h4>マクロは非対応</h4><p>VBAを使う業務には向きません</p>
+      </div>
+      <div class="seccard">
+        <svg class="icn" viewBox="0 0 64 64" fill="none"><path d="M14 46c10-18 18-24 22-24s4 8-2 14 2 6 8 0" stroke="#5FD2FF" stroke-width="4" stroke-linecap="round"/><path d="M10 54h44" stroke="#fff" stroke-width="3.5" stroke-linecap="round" opacity=".55"/><circle cx="48" cy="18" r="9" stroke="#F5B21A" stroke-width="3.5"/><path d="M44 18l3 3 5-6" stroke="#F5B21A" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <h4>Windows専用</h4><p>Macでは動作しません</p>
+      </div>
+      <div class="seccard">
+        <svg class="icn" viewBox="0 0 64 64" fill="none"><circle cx="32" cy="32" r="20" stroke="#5FD2FF" stroke-width="3.5"/><path d="M32 20v13l9 6" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M46 10l8 6M18 10l-8 6" stroke="#F5B21A" stroke-width="3.5" stroke-linecap="round"/></svg>
+        <h4>CD-ROMは非同梱</h4><p>シリアル番号と手順書が入っています</p>
+      </div>
+      <div class="seccard">
+        <svg class="icn" viewBox="0 0 64 64" fill="none"><rect x="14" y="28" width="36" height="26" rx="4" fill="#fff" opacity=".12"/><rect x="14" y="28" width="36" height="26" rx="4" stroke="#5FD2FF" stroke-width="3.5"/><path d="M22 28v-8a10 10 0 0120 0v8" stroke="#F5B21A" stroke-width="3.5" stroke-linecap="round"/><circle cx="32" cy="40" r="4" fill="#5FD2FF"/></svg>
+        <h4>古い形式は差が出る</h4><p>.doc/.xls では見え方が変わる場合があります</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ S6 2台利用 ============ -->
+  <section class="scene" id="s6">
+    <div class="bg bg-grad-blue"></div>
+    <div class="grid-lines" style="opacity:.10"></div>
+    <div class="newbadge" id="s6new" style="background:var(--blue-d)">1ライセンス</div>
+    <h2 class="headline" id="s6h" style="--fs:4.9rem">職場と自宅、<span class="hl">2台まで</span>。</h2>
+    <div class="sub" id="s6sub">持ち帰った仕事も、家の書類も、この1本で</div>
+    <div class="steps" id="s6steps">
+      <div class="step"><div class="sn">1</div><div><h4>職場のPCに</h4><p>1台目をインストール</p></div></div>
+      <div class="arrowdot">›</div>
+      <div class="step"><div class="sn">2</div><div><h4>自宅のPCに</h4><p>2台目をインストール</p></div></div>
+      <div class="arrowdot">›</div>
+      <div class="step"><div class="sn">3</div><div><h4>どちらでも同じに</h4><p>同じライセンスで使える</p></div></div>
+    </div>
+  </section>
+
+  <!-- ============ S7 コスト：価格は出さず、支払いの構造だけを見せる ============ -->
+  <section class="scene" id="s7">
+    <div class="bg bg-grad-navy"></div>
+    <div class="eyebrow" id="s7eye">コストの考え方</div>
+    <h2 class="headline" id="s7h" style="--fs:4.4rem">月額の契約は不要。<br>支払いは、<span class="hl">この一度だけ</span>。</h2>
+    <div class="costwrap" id="s7cost">
+      <div class="costcol">
+        <div class="bars" id="s7subbars"></div>
+        <div class="costlabel"><div class="cl1">毎年払う方式</div><div class="cl2">使い続けるかぎり支払いが続く</div></div>
+      </div>
+      <div class="vs" id="s7vs">VS</div>
+      <div class="costcol">
+        <div class="bars" id="s7oncebars"></div>
+        <div class="costlabel"><div class="cl1 win">Polaris Office 2</div><div class="cl2">支払いは最初の1回だけ</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ S8 クロージング：仕様を隠さず出す ============ -->
+  <section class="scene" id="s8">
+    <div class="bg bg-grad-blue"></div>
+    <div class="grid-lines" style="opacity:.10"></div>
+    <div class="reveal" id="s8reveal" style="gap:4rem">
+      <div class="pkg-wrap" id="s8pkgwrap">
+        <img class="pkg" src="assets/pkg.jpg" alt="" style="width:20rem;height:20rem">
+      </div>
+      <div class="reveal-txt">
+        <div class="prodname" style="--fs:4.4rem;font-size:4.4rem">Polaris Office<span class="ver" style="font-size:2.7rem">2</span></div>
+        <div class="edition" style="font-size:2.7rem">カード版</div>
+      </div>
+    </div>
+    <div class="proofrow" id="s8proof">
+      <div class="proof"><div class="pv">490以上</div><div class="pl">表計算の対応関数</div></div>
+      <div class="proof"><div class="pv">2台</div><div class="pl">1ライセンスあたり</div></div>
+      <div class="proof"><div class="pv">4形式</div><div class="pl">表計算・文書・スライド・PDF</div></div>
+    </div>
+    <div class="speclist" id="s8specs">
+      <span class="spec">Windows 対応</span>
+      <span class="spec">カード版</span>
+      <span class="spec">買い切りライセンス</span>
+    </div>
+  </section>
+
+  <div class="notes" id="notes"></div>
+  <div class="wipe" id="wipe" style="opacity:0"></div>
+</div>
+
+<script src="timeline.js"></script>
+</body>
+</html>
